@@ -25,3 +25,7 @@ app.get('/action/:id', (req, res) => {
         res.status(404).send('Action does not exist');
     }
 })
+
+app.listen(6833, () => {
+    console.log(`Server listening on port ${port}`);
+});
