@@ -27,5 +27,5 @@ app.get('/action/:id', (req, res) => {
 })
 
 app.listen(6833, () => {
-    console.log(`Server listening on port ${port}`);
+    console.log(`Server listening on port 6833`);
 });
