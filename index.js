@@ -1,4 +1,3 @@
-let config = require('./config.json')
 const express = require("express");
 const app = express();
 const exec = require('child_process').exec;
@@ -8,6 +7,7 @@ app.use(cors());
 
 app.get('/get_config', (req,res) => {
     console.log(`Sequenzia requested boot configuration`);
+    const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     res.json(config.actions.map(a => {
         let r = {
             ...a
@@ -17,6 +17,7 @@ app.get('/get_config', (req,res) => {
     }))
 })
 app.get('/action/:id', (req, res) => {
+    const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     const action = config.actions.filter(e => e.id === req.params.id)[0]
     if (action) {
         exec(action.command, (error, stdout, stderr) => {
