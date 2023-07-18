@@ -5,7 +5,14 @@ const exec = require('child_process').exec;
 
 
 app.get('/get_config', (req,res) => {
-
+    console.log(`Sequenzia requested boot configuration`);
+    res.json(config.actions.map(a => {
+        let r = {
+            ...a
+        }
+        delete r.command;
+        return r;
+    }))
 })
 
 app.get('/action/:id', (req, res) => {
@@ -17,7 +24,6 @@ app.get('/action/:id', (req, res) => {
                 res.status(500).send('Command execution failed');
                 return;
             }
-
             console.log(`Command '${action.command}' executed successfully`);
             res.send(stdout);
         });
