@@ -2,7 +2,9 @@ let config = require('./config.json')
 const express = require("express");
 const app = express();
 const exec = require('child_process').exec;
+const cors = require('cors');
 
+app.use(cors());
 
 app.get('/get_config', (req,res) => {
     console.log(`Sequenzia requested boot configuration`);
@@ -14,7 +16,6 @@ app.get('/get_config', (req,res) => {
         return r;
     }))
 })
-
 app.get('/action/:id', (req, res) => {
     const action = config.actions.filter(e => e.id === req.params.id)[0]
     if (action) {
