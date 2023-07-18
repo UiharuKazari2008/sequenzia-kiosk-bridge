@@ -1,0 +1,8 @@
+{
+  "actions": [
+    {
+      "id": "Test",
+      "command": "powershell.exe -Command \"Write-Host 'Hello World'\""
+    }
+  ]
+}
