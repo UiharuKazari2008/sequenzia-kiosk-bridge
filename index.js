@@ -17,6 +17,28 @@ app.get('/get_config', (req,res) => {
         return r;
     }))
 })
+app.get('/get_config2', (req,res) => {
+    console.log(`Sequenzia requested boot configuration`);
+    const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    res.json({
+        display_config: config.display_config,
+        padding: config.padding,
+        buttons: config.actions.map(a => {
+            let r = {
+                ...a
+            }
+            delete r.command;
+            return r;
+        }),
+        applications: config.applications.map(a => {
+            let r = {
+                ...a
+            }
+            delete r.command;
+            return r;
+        })
+    })
+})
 app.get('/action/:id', (req, res) => {
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     const action = config.actions.filter(e => e.id === req.params.id)[0]
