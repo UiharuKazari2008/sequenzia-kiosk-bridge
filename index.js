@@ -102,7 +102,7 @@ if (init_config.serialPort) {
                                     i = 50;
                                 } else if (i >= 5) {
                                     //res.status(500).send("Comm Timeout");
-                                    response = null;
+                                    response = "NO RESPONSE";
                                 } else {
                                     i++
                                 }
