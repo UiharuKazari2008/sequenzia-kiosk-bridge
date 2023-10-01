@@ -82,12 +82,14 @@ if (init_config.serialPort) {
     function initializeSerialPort() {
         const port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
         const parser = port.pipe(new ReadlineParser({delimiter: '\n'}));
+        let pingTimer = setInterval(() => {
+            port.write("_KIOSK_PING_");
+        }, 30000)
         parser.on('data', (data) => {
             const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
             const receivedData = data.toString().trim();
             if (receivedData === "_KIOSK_HELLO?_") {
                 port.write("_KIOSK_READY_");
-                port.close();
             } else {
                 const action = (config.actions.map(e => `_KIOSK_` + e.id + '_')).indexOf(receivedData);
 
@@ -107,9 +109,11 @@ if (init_config.serialPort) {
         });
         port.on('error', (err) => {
             console.error(`Serial port error: ${err.message}`);
+            clearInterval(pingTimer);
             setTimeout(initializeSerialPort, 5000); // Retry after 5 seconds
         });
         port.on('close', (err) => {
+            clearInterval(pingTimer);
             setTimeout(initializeSerialPort, 1000); // Retry after 5 seconds
         });
 
