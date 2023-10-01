@@ -97,7 +97,7 @@ if (init_config.serialPort) {
                             await sleep(1000).then(() => {
                                 console.log(`Waiting for response...`)
                                 if (response !== null) {
-                                    res.status(200).send(response);
+                                    res.status((response === "NO RESPONSE") ? 500 : 200).send(response);
                                     response = null;
                                     i = 50;
                                 } else if (i >= 5) {
@@ -112,7 +112,7 @@ if (init_config.serialPort) {
                         res.status(200).send("OK");
                     }
                 } else {
-                    res.status(500).send("Not Configured");
+                    res.status(400).send("Not Configured");
                 }
             } else {
                 res.status(500).send("Comm Failure");
@@ -125,7 +125,7 @@ if (init_config.serialPort) {
         port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
         const parser = port.pipe(new ReadlineParser({delimiter: '\n'}));
         let pingTimer = setInterval(() => {
-            port.write("_KIOSK_PING_");
+            port.write("_KIOSK_PING _");
         }, 30000)
         parser.on('data', (data) => {
             const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
