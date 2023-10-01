@@ -80,7 +80,7 @@ let response = null;
 app.get('/mcu_link/:command', async (req,res) => {
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     if (config.mcu_commands) {
-        if (port && port.write !== undefined) {
+        if (request === null) {
             const command = config.mcu_commands.filter(e => e.id === req.params.command);
             if (command.length > 0 && command[0].cmd) {
                 console.log(`_KIOSK_${command[0].cmd}_`)
@@ -109,7 +109,7 @@ app.get('/mcu_link/:command', async (req,res) => {
                 res.status(400).send("Not Configured");
             }
         } else {
-            res.status(500).send("Comm Failure");
+            res.status(501).send("Request Busy");
         }
     } else {
         res.status(500).send("Not Configured");
