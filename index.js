@@ -5,6 +5,21 @@ const exec = require('child_process').exec;
 const cors = require('cors');
 const { SerialPort, ReadlineParser } = require('serialport');
 const init_config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+const trueLog = console.log;
+/*console.log = function(msg) {
+    fs.appendFile("./console.log", msg, function(err) {
+        if(err) {
+            return trueLog(err);
+        }
+    });
+}
+console.error = function(msg) {
+    fs.appendFile("./error.log", msg, function(err) {
+        if(err) {
+            return trueLog(err);
+        }
+    });
+}*/
 
 app.use(cors());
 
@@ -72,6 +87,7 @@ if (init_config.serialPort) {
             const receivedData = data.toString().trim();
             if (receivedData === "_KIOSK_HELLO?_") {
                 port.write("_KIOSK_READY_");
+                port.close();
             } else {
                 const action = (config.actions.map(e => `_KIOSK_` + e.id + '_')).indexOf(receivedData);
 
@@ -92,6 +108,9 @@ if (init_config.serialPort) {
         port.on('error', (err) => {
             console.error(`Serial port error: ${err.message}`);
             setTimeout(initializeSerialPort, 5000); // Retry after 5 seconds
+        });
+        port.on('close', (err) => {
+            setTimeout(initializeSerialPort, 1000); // Retry after 5 seconds
         });
 
         // Handle the opening of the serial port
