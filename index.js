@@ -75,58 +75,63 @@ app.get('/action/:id', (req, res) => {
         res.status(404).send('Action does not exist');
     }
 })
-
+let request = null;
+let response = null;
+app.get('/mcu_link/:command', async (req,res) => {
+    const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    if (config.mcu_commands) {
+        if (port && port.write !== undefined) {
+            const command = config.mcu_commands.filter(e => e.id === req.params.command);
+            if (command.length > 0 && command[0].cmd) {
+                console.log(`_KIOSK_${command[0].cmd}_`)
+                request = `_KIOSK_${command[0].cmd}_`;
+                if (command.length > 0 && command[0].return === true) {
+                    let i = 0;
+                    while (i <= 6) {
+                        await sleep(1000).then(() => {
+                            console.log(`Waiting for response...`)
+                            if (response !== null) {
+                                res.status((response === "NO RESPONSE") ? 500 : 200).send(response);
+                                response = null;
+                                i = 50;
+                            } else if (i >= 5) {
+                                //res.status(500).send("Comm Timeout");
+                                response = "NO RESPONSE";
+                            } else {
+                                i++
+                            }
+                        })
+                    }
+                } else {
+                    res.status(200).send("OK");
+                }
+            } else {
+                res.status(400).send("Not Configured");
+            }
+        } else {
+            res.status(500).send("Comm Failure");
+        }
+    } else {
+        res.status(500).send("Not Configured");
+    }
+})
 app.listen(6833, () => {
     console.log(`Server listening on port 6833`);
 });
 
 if (init_config.serialPort) {
-    let port = null;
-    let response = null;
-    app.get('/mcu_link/:command', async (req,res) => {
-        const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-        if (config.mcu_commands) {
-            if (port && port.write !== undefined) {
-                const command = config.mcu_commands.filter(e => e.id === req.params.command);
-                if (command.length > 0 && command[0].cmd) {
-                    console.log(`_KIOSK_${command[0].cmd}_`)
-                    port.write(`\n\n_KIOSK_${command[0].cmd}_\n`);
-                    if (command.length > 0 && command[0].return === true) {
-                        let i = 0;
-                        while (i <= 6) {
-                            await sleep(1000).then(() => {
-                                console.log(`Waiting for response...`)
-                                if (response !== null) {
-                                    res.status((response === "NO RESPONSE") ? 500 : 200).send(response);
-                                    response = null;
-                                    i = 50;
-                                } else if (i >= 5) {
-                                    //res.status(500).send("Comm Timeout");
-                                    response = "NO RESPONSE";
-                                } else {
-                                    i++
-                                }
-                            })
-                        }
-                    } else {
-                        res.status(200).send("OK");
-                    }
-                } else {
-                    res.status(400).send("Not Configured");
-                }
-            } else {
-                res.status(500).send("Comm Failure");
-            }
-        } else {
-            res.status(500).send("Not Configured");
-        }
-    })
     function initializeSerialPort() {
-        port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
+        const port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
         const parser = port.pipe(new ReadlineParser({delimiter: '\n'}));
         let pingTimer = setInterval(() => {
             port.write("_KIOSK_PING _\n");
         }, 30000)
+        let requestTimer = setInterval(() => {
+            if (request !== null) {
+                port.write('\n' + request);
+                request = null;
+            }
+        }, 10)
         parser.on('data', (data) => {
             const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
             const receivedData = data.toString().trim();
@@ -159,10 +164,12 @@ if (init_config.serialPort) {
         port.on('error', (err) => {
             console.error(`Serial port error: ${err.message}`);
             clearInterval(pingTimer);
+            clearInterval(requestTimer);
             setTimeout(initializeSerialPort, 5000); // Retry after 5 seconds
         });
         port.on('close', (err) => {
             clearInterval(pingTimer);
+            clearInterval(requestTimer);
             setTimeout(initializeSerialPort, 1000); // Retry after 5 seconds
         });
 
