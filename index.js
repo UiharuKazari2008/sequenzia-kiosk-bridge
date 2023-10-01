@@ -71,7 +71,7 @@ if (init_config.serialPort) {
             const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
             const receivedData = data.toString().trim();
             if (receivedData === "_KIOSK_HELLO?_") {
-                port.write("\n\n_KIOSK_READY_\n\n");
+                port.write("_KIOSK_READY_");
             } else {
                 const action = (config.actions.map(e => `_KIOSK_` + e.id + '_')).indexOf(receivedData);
 
