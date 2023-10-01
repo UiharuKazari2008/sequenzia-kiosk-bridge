@@ -90,7 +90,7 @@ if (init_config.serialPort) {
                 const command = config.mcu_commands.filter(e => e.id === req.params.command);
                 if (command.length > 0 && command[0].cmd) {
                     console.log(`_KIOSK_${command[0].cmd}_`)
-                    port.write(`\n\n_KIOSK_${command[0].cmd}_`);
+                    port.write(`\n\n_KIOSK_${command[0].cmd}_\n`);
                     if (command.length > 0 && command[0].return === true) {
                         let i = 0;
                         while (i <= 6) {
@@ -125,14 +125,14 @@ if (init_config.serialPort) {
         port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
         const parser = port.pipe(new ReadlineParser({delimiter: '\n'}));
         let pingTimer = setInterval(() => {
-            port.write("_KIOSK_PING _");
+            port.write("_KIOSK_PING _\n");
         }, 30000)
         parser.on('data', (data) => {
             const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
             const receivedData = data.toString().trim();
             console.log(receivedData);
             if (receivedData === "_KIOSK_HELLO?_") {
-                port.write("_KIOSK_READY_");
+                port.write("_KIOSK_READY_\n");
             } else if (receivedData.startsWith("_KIOSK_DATA_")) {
                 let _res = receivedData;
                 _res = _res.replace("_KIOSK_DATA_[", "");
