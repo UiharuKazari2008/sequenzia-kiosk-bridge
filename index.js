@@ -90,7 +90,7 @@ if (init_config.serialPort) {
                 const command = config.mcu_commands.filter(e => e.id === req.params.command);
                 if (command.length > 0 && command[0].cmd) {
                     console.log(`_KIOSK_${command[0].cmd}_`)
-                    port.write(`_KIOSK_${command[0].cmd}_`);
+                    port.write(`\n\n_KIOSK_${command[0].cmd}_`);
                     if (command.length > 0 && command[0].return === true) {
                         let i = 0;
                         while (i <= 6) {
@@ -102,6 +102,7 @@ if (init_config.serialPort) {
                                     i = 50;
                                 } else if (i >= 5) {
                                     res.status(500).send("Comm Timeout");
+                                    response = null;
                                 } else {
                                     i++
                                 }
@@ -129,6 +130,7 @@ if (init_config.serialPort) {
         parser.on('data', (data) => {
             const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
             const receivedData = data.toString().trim();
+            console.log(receivedData);
             if (receivedData === "_KIOSK_HELLO?_") {
                 port.write("_KIOSK_READY_");
             } else if (receivedData.startsWith("_KIOSK_DATA_")) {
@@ -153,7 +155,6 @@ if (init_config.serialPort) {
                     });
                 }
             }
-            console.log(receivedData);
         });
         port.on('error', (err) => {
             console.error(`Serial port error: ${err.message}`);
