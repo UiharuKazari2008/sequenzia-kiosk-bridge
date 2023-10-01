@@ -84,12 +84,12 @@ if (init_config.serialPort) {
     let port = null;
     let response = null;
     app.get('/mcu_link/:command', async (req,res) => {
-        console.log(`MCU Command`);
         const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
         if (config.mcu_commands) {
             if (port && port.write !== undefined) {
                 const command = config.mcu_commands.filter(e => e.id === req.params.command);
                 if (command.length > 0 && command[0].cmd) {
+                    console.log(`_KIOSK_${command[0].cmd}_`)
                     port.write(`_KIOSK_${command[0].cmd}_`);
                     if (command.length > 0 && command[0].return === true) {
                         let i = 0;
