@@ -58,6 +58,15 @@ app.get('/get_config2', (req,res) => {
         })
     })
 })
+app.get('/get_special_menu/chun', (req,res) => {
+    console.log(`Sequenzia requested Chunithm Menu configuration`);
+    const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    if (config.touch_menus) {
+        res.json(config.touch_menus)
+    } else {
+        res.status(404).end();
+    }
+})
 app.get('/action/:id', (req, res) => {
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     const action = config.actions.filter(e => e.id === req.params.id)[0]
