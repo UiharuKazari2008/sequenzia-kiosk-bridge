@@ -1,2 +1,2 @@
 # sequenzia-kiosk-bridge
-Windows Interface for Sequenzia ADS Kiosk Controls
+PC Interface for Sequenzia ADS Kiosk Controls and HappyCAB MCU
