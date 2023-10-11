@@ -86,10 +86,11 @@ app.get('/action/:id', (req, res) => {
     }
 })
 
-function percentageToDecibel(percentage, minDb, maxDb) {
+function percentageToDecibel(percentage, _min, _max {
     percentage = Math.min(100, Math.max(0, percentage));
-    const logValue = Math.log10(percentage / 100 + 1);
-    return (minDb || -80) + logValue * ((maxDb || 0) - (minDb || -80));
+    const minDb = _min || -80;
+    const maxDb = _max || 0;
+    return minDb + (percentage / 100) * (maxDb - minDb);
 }
 app.get('/volume/gain', (req, res) => {
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
