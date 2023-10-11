@@ -95,7 +95,7 @@ app.get('/volume/gain', (req, res) => {
     const volume_controls = config.volume_controls
     if (volume_controls) {
         if (req.query && req.query.set) {
-            exec(`./vmcli.exe ${volume_controls.row}.Gain=${convertRange(req.query.set, 0, 100, volume_controls.min || -80, volume_controls.max || 0)}`, (error, stdout, stderr) => {
+            exec(`vmcli.exe ${volume_controls.row}.Gain=${convertRange(req.query.set, 0, 100, volume_controls.min || -80, volume_controls.max || 0)}`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error executing setting gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
@@ -104,7 +104,7 @@ app.get('/volume/gain', (req, res) => {
                 }
             });
         } else {
-            exec(`./vmcli.exe ${volume_controls.row}.Gain`, (error, stdout, stderr) => {
+            exec(`vmcli.exe ${volume_controls.row}.Gain`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error executing getting current gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
@@ -122,7 +122,7 @@ app.get('/volume/mute', (req, res) => {
     const volume_controls = config.volume_controls
     if (volume_controls) {
         if (req.query && req.query.set) {
-            exec(`./vmcli.exe ${volume_controls.row}.Mute=${req.query.set}`, (error, stdout, stderr) => {
+            exec(`vmcli.exe ${volume_controls.row}.Mute=${req.query.set}`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error executing setting mute: ${error.message}`);
                     res.status(500).send('Command execution failed');
@@ -131,7 +131,7 @@ app.get('/volume/mute', (req, res) => {
                 }
             });
         } else {
-            exec(`./vmcli.exe ${volume_controls.row}.Mute`, (error, stdout, stderr) => {
+            exec(`vmcli.exe ${volume_controls.row}.Mute`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error executing getting current mute: ${error.message}`);
                     res.status(500).send('Command execution failed');
