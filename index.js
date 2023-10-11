@@ -87,10 +87,16 @@ app.get('/action/:id', (req, res) => {
 })
 
 function percentageToDecibel(percentage, _min, _max) {
-    percentage = Math.min(100, Math.max(0, percentage));
     const minDb = _min || -80;
     const maxDb = _max || 0;
+    percentage = Math.min(100, Math.max(0, percentage));
     return minDb + (percentage / 100) * (maxDb - minDb);
+}
+function decibelToPercentage(dbValue, _min, _max) {
+    const minDb = _min || -80;
+    const maxDb = _max || 0;
+    dbValue = Math.min(0, Math.max(minDb, dbValue));
+    return ((dbValue - minDb) / (maxDb - minDb)) * 100;
 }
 app.get('/volume/gain', (req, res) => {
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
@@ -111,7 +117,7 @@ app.get('/volume/gain', (req, res) => {
                     console.error(`Error executing getting current gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
-                    res.status(200).send(stdout.split("=").pop());
+                    res.status(200).send(decibelToPercentage(stdout.split("=").pop(), volume_controls.min || -80, volume_controls.max || 0));
                 }
             });
         }
