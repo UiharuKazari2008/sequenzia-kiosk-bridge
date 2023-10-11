@@ -86,21 +86,22 @@ app.get('/action/:id', (req, res) => {
     }
 })
 
-function convertRange(value, oldMin, oldMax, newMin, newMax) {
-    const normalizedValue = (value - oldMin) / (oldMax - oldMin);
-    return (newMax - newMin) * normalizedValue + newMin;
+function percentageToDecibel(percentage, minDb, maxDb) {
+    percentage = Math.min(100, Math.max(0, percentage));
+    const logValue = Math.log10(percentage / 100 + 1);
+    return minDb + logValue * ((maxDb || 0) - (minDb || -80));
 }
 app.get('/volume/gain', (req, res) => {
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     const volume_controls = config.volume_controls
     if (volume_controls) {
         if (req.query && req.query.set) {
-            exec(`vmcli.exe ${volume_controls.row}.Gain=${convertRange(req.query.set, 0, 100, volume_controls.min || -80, volume_controls.max || 0)}`, (error, stdout, stderr) => {
+            exec(`vmcli.exe ${volume_controls.row}.Gain=${percentageToDecibel(req.query.set, volume_controls.min || -80, volume_controls.max || 0)}`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error executing setting gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
-                    res.status(200).send(convertRange(stdout.split("=").pop(), 0, 100, volume_controls.min || -80, volume_controls.max || 0));
+                    res.status(200).send(percentageToDecibel(stdout.split("=").pop(), volume_controls.min || -80, volume_controls.max || 0));
                 }
             });
         } else {
