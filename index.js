@@ -101,7 +101,7 @@ app.get('/volume/gain', (req, res) => {
                     console.error(`Error executing setting gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
-                    res.status(200).send(percentageToDecibel(stdout.split("=").pop(), volume_controls.min || -80, volume_controls.max || 0));
+                    res.status(200).send(percentageToDecibel(stdout.split("=").pop(), volume_controls.min || -80, volume_controls.max || 0).toString());
                 }
             });
         } else {
