@@ -86,7 +86,7 @@ app.get('/action/:id', (req, res) => {
     }
 })
 
-function percentageToDecibel(percentage, _min, _max {
+function percentageToDecibel(percentage, _min, _max) {
     percentage = Math.min(100, Math.max(0, percentage));
     const minDb = _min || -80;
     const maxDb = _max || 0;
