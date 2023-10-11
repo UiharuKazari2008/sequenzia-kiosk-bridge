@@ -144,7 +144,7 @@ app.get('/volume/mute', (req, res) => {
                     console.error(`Error executing getting current mute: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
-                    res.status(200).send((parseFloat(stdout.split("=").pop()) * -1).toFixed().toString());
+                    res.status(200).send((stdout.split("=").pop().split('.')[0] === "0") ? "1" : "0");
                 }
             });
         }
