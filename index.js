@@ -96,12 +96,12 @@ app.get('/volume/gain', (req, res) => {
     const volume_controls = config.volume_controls
     if (volume_controls) {
         if (req.query && req.query.set) {
-            exec(`vmcli.exe ${volume_controls.row}.Gain=${percentageToDecibel(req.query.set, volume_controls.min || -80, volume_controls.max || 0)}`, (error, stdout, stderr) => {
+            exec(`vmcli.exe ${volume_controls.row}.Gain=${percentageToDecibel(parseInt(req.query.set), volume_controls.min || -80, volume_controls.max || 0)}`, (error, stdout, stderr) => {
                 if (error) {
                     console.error(`Error executing setting gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
-                    res.status(200).send(percentageToDecibel(stdout.split("=").pop(), volume_controls.min || -80, volume_controls.max || 0).toString());
+                    res.status(200).send(req.query.set);
                 }
             });
         } else {
