@@ -75,13 +75,73 @@ app.get('/action/:id', (req, res) => {
             if (error) {
                 console.error(`Error executing command '${action.command}': ${error.message}`);
                 res.status(500).send('Command execution failed');
-                return;
+
+            } else {
+                console.log(`Command '${action.command}' executed successfully`);
+                res.send(stdout);
             }
-            console.log(`Command '${action.command}' executed successfully`);
-            res.send(stdout);
         });
     } else {
         res.status(404).send('Action does not exist');
+    }
+})
+
+function convertRange(value, oldMin, oldMax, newMin, newMax) {
+    const normalizedValue = (value - oldMin) / (oldMax - oldMin);
+    return (newMax - newMin) * normalizedValue + newMin;
+}
+app.get('/volume/gain', (req, res) => {
+    const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    const volume_controls = config.volume_controls
+    if (volume_controls) {
+        if (req.query && req.query.set) {
+            exec(`./vmcli.exe ${volume_controls.row}.Gain=${convertRange(req.query.set, 0, 100, volume_controls.min || -80, volume_controls.max || 0)}`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`Error executing setting gain: ${error.message}`);
+                    res.status(500).send('Command execution failed');
+                } else {
+                    res.send(stdout);
+                }
+            });
+        } else {
+            exec(`./vmcli.exe ${volume_controls.row}.Gain`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`Error executing getting current gain: ${error.message}`);
+                    res.status(500).send('Command execution failed');
+                } else {
+                    res.send(stdout);
+                }
+            });
+        }
+    } else {
+        res.status(500).send('Volume control not configured');
+    }
+})
+app.get('/volume/mute', (req, res) => {
+    const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+    const volume_controls = config.volume_controls
+    if (volume_controls) {
+        if (req.query && req.query.set) {
+            exec(`./vmcli.exe ${volume_controls.row}.Mute=${req.query.set}`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`Error executing setting mute: ${error.message}`);
+                    res.status(500).send('Command execution failed');
+                } else {
+                    res.send(stdout);
+                }
+            });
+        } else {
+            exec(`./vmcli.exe ${volume_controls.row}.Mute`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`Error executing getting current mute: ${error.message}`);
+                    res.status(500).send('Command execution failed');
+                } else {
+                    res.send(stdout);
+                }
+            });
+        }
+    } else {
+        res.status(500).send('Volume control not configured');
     }
 })
 let request = null;
@@ -163,9 +223,9 @@ if (init_config.serialPort) {
                     exec(config.actions[action].command, (error, stdout, stderr) => {
                         if (error) {
                             console.error(`Error executing command '${config.actions[action].command}': ${error.message}`);
-                            return;
+                        } else {
+                            console.log(`Command '${config.actions[action].command}' executed successfully`);
                         }
-                        console.log(`Command '${config.actions[action].command}' executed successfully`);
                     });
                 }
             }
