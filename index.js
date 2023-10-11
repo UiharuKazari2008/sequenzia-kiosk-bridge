@@ -100,7 +100,7 @@ app.get('/volume/gain', (req, res) => {
                     console.error(`Error executing setting gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
-                    res.send(stdout);
+                    res.send(convertRange(stdout.split("=").pop(), 0, 100, volume_controls.min || -80, volume_controls.max || 0));
                 }
             });
         } else {
@@ -109,7 +109,7 @@ app.get('/volume/gain', (req, res) => {
                     console.error(`Error executing getting current gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
-                    res.send(stdout);
+                    res.send(stdout.split("=").pop());
                 }
             });
         }
@@ -127,7 +127,7 @@ app.get('/volume/mute', (req, res) => {
                     console.error(`Error executing setting mute: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
-                    res.send(stdout);
+                    res.send(stdout.split("=").pop());
                 }
             });
         } else {
@@ -136,7 +136,7 @@ app.get('/volume/mute', (req, res) => {
                     console.error(`Error executing getting current mute: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
-                    res.send(stdout);
+                    res.send(stdout.split("=").pop());
                 }
             });
         }
