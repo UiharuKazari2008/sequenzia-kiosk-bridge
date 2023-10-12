@@ -152,6 +152,7 @@ app.get('/volume/mute', (req, res) => {
         res.status(500).send('Volume control not configured');
     }
 })
+
 let request = null;
 let response = null;
 app.get('/mcu_link/:command', async (req,res) => {
@@ -160,20 +161,36 @@ app.get('/mcu_link/:command', async (req,res) => {
         if (request === null) {
             const command = config.mcu_commands.filter(e => e.id === req.params.command);
             if (command.length > 0 && command[0].cmd) {
-                console.log(`_KIOSK_${command[0].cmd}_`)
-                request = `_KIOSK_${command[0].cmd}_`;
+                let _request = `${command[0].cmd}`;
+                if (req.query.options) {
+                    _request += "::";
+                    if (typeof req.query.options === "string") {
+                        _request += req.query.options
+                    } else {
+                        _request += req.query.options.join("::");
+                    }
+                } else if (command[0].options) {
+                    _request += "::";
+                    if (typeof command[0].options === "string") {
+                        _request += command[0].options
+                    } else {
+                        _request += command[0].options.join("::");
+                    }
+                }
+                _request += "::";
+                request = _request;
                 if (command.length > 0 && command[0].return === true) {
                     let i = 0;
-                    while (i <= 6) {
-                        await sleep(1000).then(() => {
+                    while (i <= 51) {
+                        await sleep(100).then(() => {
                             console.log(`Waiting for response...`)
                             if (response !== null) {
-                                res.status((response === "NO RESPONSE") ? 500 : 200).send(response);
+                                res.status((response === "FAIL - NO RESPONSE FROM MCU!") ? 500 : 200).send(response);
                                 response = null;
-                                i = 50;
-                            } else if (i >= 5) {
+                                i = 500;
+                            } else if (i >= 50) {
                                 //res.status(500).send("Comm Timeout");
-                                response = "NO RESPONSE";
+                                response = "FAIL - NO RESPONSE FROM MCU!";
                             } else {
                                 i++
                             }
@@ -201,40 +218,46 @@ if (init_config.serialPort) {
         const port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
         const parser = port.pipe(new ReadlineParser({delimiter: '\n'}));
         let pingTimer = setInterval(() => {
-            port.write("_KIOSK_PING _\n");
+            port.write("PING::\n");
         }, 30000)
         let requestTimer = setInterval(() => {
             if (request !== null) {
-                port.write('\n' + request);
+                port.write('\n' + request + "\n");
                 request = null;
             }
-        }, 10)
+        }, 5)
         parser.on('data', (data) => {
             const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-            const receivedData = data.toString().trim();
-            console.log(receivedData);
-            if (receivedData === "_KIOSK_HELLO?_") {
-                port.write("_KIOSK_READY_\n");
-            } else if (receivedData.startsWith("_KIOSK_DATA_")) {
-                let _res = receivedData;
-                _res = _res.replace("_KIOSK_DATA_[", "");
-                _res = _res.split("]_");
-                _res.pop();
-                _res = _res.join(']_');
-                response = _res;
-            } else {
-                const action = (config.actions.map(e => `_KIOSK_` + e.id + '_')).indexOf(receivedData);
-
-                // Check if the received data matches the desired string
-                if (action !== -1) {
-                    console.log(config.actions[action]);
-                    exec(config.actions[action].command, (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`Error executing command '${config.actions[action].command}': ${error.message}`);
-                        } else {
-                            console.log(`Command '${config.actions[action].command}' executed successfully`);
+            let receivedData = data.toString().trim()
+            if (receivedData.includes("::")) {
+                receivedData = receivedData.split("::");
+                console.log(receivedData);
+                if (receivedData[0] === "PROBE") {
+                    switch (receivedData[1]) {
+                        case "SEARCH":
+                            port.write("PROBE::HELLO::Sequenzia Kiosk Bridge v3::\n");
+                            break;
+                        default:
+                            break;
+                    }
+                } else if (receivedData[0] === "R") {
+                    response = receivedData.slice(1);
+                } else if (receivedData[0] === "ACTION") {
+                    const action = (config.actions.map(e => e.id)).indexOf(receivedData[1]);
+                    if (action !== -1) {
+                        let command = config.actions[action].command;
+                        if (config.actions[action].accept_params && receivedData[2] !== undefined) {
+                            command += ` ${receivedData[2]}`;
                         }
-                    });
+                        console.log(command);
+                        exec(command, (error, stdout, stderr) => {
+                            if (error) {
+                                console.error(`Error executing command '${command}': ${error.message}`);
+                            } else {
+                                console.log(`Command '${command}' executed successfully`);
+                            }
+                        });
+                    }
                 }
             }
         });
