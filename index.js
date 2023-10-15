@@ -241,7 +241,8 @@ if (init_config.serialPort) {
                             break;
                     }
                 } else if (receivedData[0] === "R") {
-                    response = receivedData.slice(1);
+                    if (receivedData[0] !== "PONG")
+                        response = receivedData.slice(1);
                 } else if (receivedData[0] === "ACTION") {
                     const action = (config.actions.map(e => e.id)).indexOf(receivedData[1]);
                     if (action !== -1) {
