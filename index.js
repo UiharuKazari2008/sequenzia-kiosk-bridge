@@ -181,14 +181,14 @@ app.get('/mcu_link/:command', async (req,res) => {
                 request = _request;
                 if (command.length > 0 && command[0].return === true) {
                     let i = 0;
-                    while (i <= 51) {
-                        await sleep(100).then(() => {
+                    while (i <= 501) {
+                        await sleep(10).then(() => {
                             console.log(`Waiting for response...`)
                             if (response !== null) {
-                                res.status((response === "FAIL - NO RESPONSE FROM MCU!") ? 500 : 200).send(response);
+                                res.status((response === "FAIL - NO RESPONSE FROM MCU!") ? 500 : 200).send(response.join(' '));
                                 response = null;
-                                i = 500;
-                            } else if (i >= 50) {
+                                i = 5000;
+                            } else if (i >= 500) {
                                 //res.status(500).send("Comm Timeout");
                                 response = "FAIL - NO RESPONSE FROM MCU!";
                             } else {
