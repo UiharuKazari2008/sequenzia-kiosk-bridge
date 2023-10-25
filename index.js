@@ -8,7 +8,7 @@ const init_config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
 log = function(msg) {
-    fs.appendFile("./log.txt", `LOG : ${msg}`, function(err) {
+    fs.appendFile("./log.txt", `LOG : ${msg}\n`, function(err) {
         if(err) {
             return trueLog(err);
         }
@@ -16,7 +16,7 @@ log = function(msg) {
 }
 
 error = function(msg) {
-    fs.appendFile("./log.txt", `ERROR : ${msg}`, function(err) {
+    fs.appendFile("./log.txt", `ERROR : ${msg}\n`, function(err) {
         if(err) {
             return trueLog(err);
         }
