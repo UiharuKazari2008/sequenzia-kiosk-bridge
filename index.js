@@ -1,10 +1,8 @@
 const fs = require("fs");
-const http = require('http');
 const express = require("express");
 const WebSocket = require('ws');
 const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ port: 6834 });
 const exec = require('child_process').exec;
 const cors = require('cors');
 const { SerialPort, ReadlineParser } = require('serialport');
@@ -354,7 +352,6 @@ if (init_config.serialPort) {
                     const action = (config.actions.map(e => e.id)).indexOf(receivedData[1]);
                     if (action !== -1 && config.actions[action].wsc) {
                         log("MCU to WS Requested: " + receivedData[1]);
-                        let command = config.actions[action].command;
                         WSClients.forEach(ws => ws.send({
                             location: config.actions[action].location,
                             menu: config.actions[action].menu,
