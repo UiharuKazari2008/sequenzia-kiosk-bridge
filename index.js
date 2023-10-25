@@ -1,6 +1,10 @@
 const fs = require("fs");
+const http = require('http');
 const express = require("express");
+const WebSocket = require('ws');
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 const exec = require('child_process').exec;
 const cors = require('cors');
 const { SerialPort, ReadlineParser } = require('serialport');
@@ -213,6 +217,105 @@ app.listen(6833, () => {
     log(`Server listening on port 6833`);
 });
 
+let WSClients = {};
+let WSActiveClient = null;
+wss.on('connection', (ws) => {
+    log('Client connected');
+    const id = Date.now();
+    // Send a welcome message to the client
+    ws.send(JSON.stringify({init: true, error: false}));
+    WSClients[id] = ws;
+    WSActiveClient = id;
+    ws.on('message', async (message) => {
+        log(`Sequenzia Message: ${message.toString()}`);
+        try {
+            const data = JSON.parse(message.toString());
+            const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+            if (data.type) {
+                switch (data.type) {
+                    case 'mcu_link':
+                        if (config.mcu_commands) {
+                            if (request === null) {
+                                const command = config.mcu_commands.filter(e => e.id === data.command);
+                                if (command.length > 0 && command[0].cmd) {
+                                    let _request = `${command[0].cmd}`;
+                                    if (data.options) {
+                                        _request += "::";
+                                        if (typeof data.options === "string") {
+                                            _request += data.options
+                                        } else {
+                                            _request += data.options.join("::");
+                                        }
+                                    } else if (command[0].options) {
+                                        _request += "::";
+                                        if (typeof command[0].options === "string") {
+                                            _request += command[0].options
+                                        } else {
+                                            _request += command[0].options.join("::");
+                                        }
+                                    }
+                                    _request += "::";
+                                    request = _request;
+                                    if (command.length > 0 && command[0].return === true) {
+                                        let i = 0;
+                                        while (i <= 501) {
+                                            await sleep(10).then(() => {
+                                                log(`Waiting for response...`)
+                                                if (response !== null) {
+                                                    ws.send(JSON.stringify({error: (response === "FAIL - NO RESPONSE FROM MCU!"), data: response.join(' ')}));
+                                                    response = null;
+                                                    i = 5000;
+                                                } else if (i >= 500) {
+                                                    response = "FAIL - NO RESPONSE FROM MCU!";
+                                                } else {
+                                                    i++
+                                                }
+                                            })
+                                        }
+                                    } else {
+                                        ws.send(JSON.stringify({error: false, ok: true}));
+                                    }
+                                } else {
+                                    ws.send(JSON.stringify({error: true, reason: `Not Configured`}));
+                                }
+                            } else {
+                                ws.send(JSON.stringify({error: true, reason: `Busy`}));
+                            }
+                        } else {
+                            ws.send(JSON.stringify({error: true, reason: `Not Configured`}));
+                        }
+                        break;
+                    case 'action':
+                        const action = config.actions.filter(e => e.id === data.id)[0]
+                        if (action) {
+                            exec(action.command, (error, stdout, stderr) => {
+                                if (error) {
+                                    error(`Error executing command '${action.command}': ${error.message}`);
+                                    ws.send(JSON.stringify({error: true, ok: false, reason: error.message}));
+
+                                } else {
+                                    log(`Command '${action.command}' executed successfully`);
+                                    ws.send(JSON.stringify({error: false, ok: true, data: stdout}));
+                                }
+                            });
+                        } else {
+                            ws.send(JSON.stringify({error: true, reason: `Unknown Action`}));
+                        }
+                        break;
+                    default:
+                        ws.send(JSON.stringify({error: true, reason: `Unknown type`}));
+                        break;
+                }
+            }
+        } catch (e) {
+            ws.send(JSON.stringify({error: true, reason: e.message}));
+        }
+    });
+    ws.on('close', () => {
+        delete WSClients[id];
+    });
+});
+
 if (init_config.serialPort) {
     function initializeSerialPort() {
         const port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
@@ -249,7 +352,10 @@ if (init_config.serialPort) {
                     }
                 } else if (receivedData[0] === "ACTION") {
                     const action = (config.actions.map(e => e.id)).indexOf(receivedData[1]);
-                    if (action !== -1) {
+                    if (action !== -1 && config.actions[action].wsc) {
+                        log("MCU to WS Requested: " + receivedData[1]);
+                        WSClients.forEach(ws => ws.send({ action: receivedData[1], data: receivedData.slice(2) }));
+                    } else if (action !== -1) {
                         log("MCU Requested: " + receivedData[1]);
                         let command = config.actions[action].command;
                         if (config.actions[action].accept_params && receivedData[2] !== undefined) {
