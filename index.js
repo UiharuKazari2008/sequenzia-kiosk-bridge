@@ -354,7 +354,13 @@ if (init_config.serialPort) {
                     const action = (config.actions.map(e => e.id)).indexOf(receivedData[1]);
                     if (action !== -1 && config.actions[action].wsc) {
                         log("MCU to WS Requested: " + receivedData[1]);
-                        WSClients.forEach(ws => ws.send({ action: receivedData[1], data: receivedData.slice(2) }));
+                        let command = config.actions[action].command;
+                        WSClients.forEach(ws => ws.send({
+                            location: config.actions[action].location,
+                            menu: config.actions[action].menu,
+                            item: config.actions[action].item,
+                            undo: config.actions[action].undo
+                        }));
                     } else if (action !== -1) {
                         log("MCU Requested: " + receivedData[1]);
                         let command = config.actions[action].command;
