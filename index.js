@@ -8,25 +8,26 @@ const init_config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
 const trueLog = console.log;
-/*console.log = function(msg) {
-    fs.appendFile("./console.log", msg, function(err) {
+log = function(msg) {
+    fs.appendFile("./log.txt", `LOG : ${msg}`, function(err) {
         if(err) {
             return trueLog(err);
         }
     });
 }
-console.error = function(msg) {
-    fs.appendFile("./error.log", msg, function(err) {
+
+error = function(msg) {
+    fs.appendFile("./log.txt", `ERROR : ${msg}`, function(err) {
         if(err) {
             return trueLog(err);
         }
     });
-}*/
+}
 
 app.use(cors());
 
 app.get('/get_config', (req,res) => {
-    console.log(`Sequenzia requested boot configuration`);
+    log(`Sequenzia requested boot configuration`);
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     res.json(config.actions.map(a => {
         let r = {
@@ -37,7 +38,7 @@ app.get('/get_config', (req,res) => {
     }))
 })
 app.get('/get_config2', (req,res) => {
-    console.log(`Sequenzia requested boot configuration`);
+    log(`Sequenzia requested boot configuration`);
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     res.json({
         display_config: config.display_config,
@@ -59,7 +60,7 @@ app.get('/get_config2', (req,res) => {
     })
 })
 app.get('/get_special_menu/chun', (req,res) => {
-    console.log(`Sequenzia requested Chunithm Menu configuration`);
+    log(`Sequenzia requested Chunithm Menu configuration`);
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     if (config.touch_menus) {
         res.json(config.touch_menus)
@@ -73,11 +74,11 @@ app.get('/action/:id', (req, res) => {
     if (action) {
         exec(action.command, (error, stdout, stderr) => {
             if (error) {
-                console.error(`Error executing command '${action.command}': ${error.message}`);
+                error(`Error executing command '${action.command}': ${error.message}`);
                 res.status(500).send('Command execution failed');
 
             } else {
-                console.log(`Command '${action.command}' executed successfully`);
+                log(`Command '${action.command}' executed successfully`);
                 res.send(stdout);
             }
         });
@@ -105,7 +106,7 @@ app.get('/volume/gain', (req, res) => {
         if (req.query && req.query.set) {
             exec(`vmcli.exe ${volume_controls.row}.Gain=${percentageToDecibel(parseInt(req.query.set), volume_controls.min || -80, volume_controls.max || 0)}`, (error, stdout, stderr) => {
                 if (error) {
-                    console.error(`Error executing setting gain: ${error.message}`);
+                    error(`Error executing setting gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
                     res.status(200).send(req.query.set);
@@ -114,7 +115,7 @@ app.get('/volume/gain', (req, res) => {
         } else {
             exec(`vmcli.exe ${volume_controls.row}.Gain`, (error, stdout, stderr) => {
                 if (error) {
-                    console.error(`Error executing getting current gain: ${error.message}`);
+                    error(`Error executing getting current gain: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
                     res.status(200).send(decibelToPercentage(stdout.split("=").pop(), volume_controls.min || -80, volume_controls.max || 0).toFixed().toString());
@@ -132,7 +133,7 @@ app.get('/volume/mute', (req, res) => {
         if (req.query && req.query.set) {
             exec(`vmcli.exe ${volume_controls.row}.Mute=${req.query.set}`, (error, stdout, stderr) => {
                 if (error) {
-                    console.error(`Error executing setting mute: ${error.message}`);
+                    error(`Error executing setting mute: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
                     res.status(200).send(req.query.set);
@@ -141,7 +142,7 @@ app.get('/volume/mute', (req, res) => {
         } else {
             exec(`vmcli.exe ${volume_controls.row}.Mute`, (error, stdout, stderr) => {
                 if (error) {
-                    console.error(`Error executing getting current mute: ${error.message}`);
+                    error(`Error executing getting current mute: ${error.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
                     res.status(200).send((stdout.split("=").pop().split('.')[0] === "0") ? "1" : "0");
@@ -183,7 +184,7 @@ app.get('/mcu_link/:command', async (req,res) => {
                     let i = 0;
                     while (i <= 51) {
                         await sleep(100).then(() => {
-                            console.log(`Waiting for response...`)
+                            log(`Waiting for response...`)
                             if (response !== null) {
                                 res.status((response === "FAIL - NO RESPONSE FROM MCU!") ? 500 : 200).send(response);
                                 response = null;
@@ -210,7 +211,7 @@ app.get('/mcu_link/:command', async (req,res) => {
     }
 })
 app.listen(6833, () => {
-    console.log(`Server listening on port 6833`);
+    log(`Server listening on port 6833`);
 });
 
 if (init_config.serialPort) {
@@ -231,38 +232,46 @@ if (init_config.serialPort) {
             let receivedData = data.toString().trim()
             if (receivedData.includes("::")) {
                 receivedData = receivedData.split("::");
-                console.log(receivedData);
                 if (receivedData[0] === "PROBE") {
                     switch (receivedData[1]) {
                         case "SEARCH":
                             port.write("PROBE::HELLO::Sequenzia Kiosk Bridge v3::\n");
+                            log("MCU Boot Hello");
                             break;
                         default:
                             break;
                     }
                 } else if (receivedData[0] === "R") {
-                    response = receivedData.slice(1);
+                    if (receivedData[1] === 'PONG') {
+
+                    } else {
+                        response = receivedData.slice(1);
+                        log("MCU Response: " + response);
+                    }
                 } else if (receivedData[0] === "ACTION") {
                     const action = (config.actions.map(e => e.id)).indexOf(receivedData[1]);
                     if (action !== -1) {
+                        log("MCU Requested: " + receivedData[1]);
                         let command = config.actions[action].command;
                         if (config.actions[action].accept_params && receivedData[2] !== undefined) {
                             command += ` ${receivedData[2]}`;
                         }
-                        console.log(command);
+                        log(command);
                         exec(command, (error, stdout, stderr) => {
                             if (error) {
-                                console.error(`Error executing command '${command}': ${error.message}`);
+                                error(`Error executing command '${command}': ${error.message}`);
                             } else {
-                                console.log(`Command '${command}' executed successfully`);
+                                log(`Command '${command}' executed successfully`);
                             }
                         });
+                    } else {
+                        log("MCU Unknown Request: " + receivedData[1]);
                     }
                 }
             }
         });
         port.on('error', (err) => {
-            console.error(`Serial port error: ${err.message}`);
+            error(`Serial port error: ${err.message}`);
             clearInterval(pingTimer);
             clearInterval(requestTimer);
             setTimeout(initializeSerialPort, 5000); // Retry after 5 seconds
@@ -275,7 +284,7 @@ if (init_config.serialPort) {
 
         // Handle the opening of the serial port
         port.on('open', () => {
-            console.log(`Listening to ${init_config.serialPort}...`);
+            log(`Listening to ${init_config.serialPort}...`);
         });
     }
     initializeSerialPort();
