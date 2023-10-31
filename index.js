@@ -431,7 +431,7 @@ if (init_config.serialPort) {
                             _request += 255;
                         }
                         _request += "::";
-                        _request += ((config.actions[action].display_message.invert) ? 0 : 1);
+                        _request += ((config.actions[action].display_message.invert) ? 1 : 0);
                         _request += "::";
                         if (config.actions[action].display_message.timeout) {
                             _request += config.actions[action].display_message.timeout;
