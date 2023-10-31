@@ -112,6 +112,7 @@ app.get('/action/:id', (req, res) => {
                     _request += "::";
                     _request += ((action.display_message.is_small) ? 2 : 1);
                     _request += "::";
+                    log(_request);
                     request = _request;
                 }
             }
