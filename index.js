@@ -73,9 +73,9 @@ app.get('/action/:id', (req, res) => {
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     const action = config.actions.filter(e => e.id === req.params.id)[0]
     if (action) {
-        exec(action.command, (error, stdout, stderr) => {
-            if (error) {
-                error(`Error executing command '${action.command}': ${error.message}`);
+        exec(action.command, (e, stdout, stderr) => {
+            if (e) {
+                error(`Error executing command '${action.command}': ${e.message}`);
                 res.status(500).send('Command execution failed');
 
             } else {
@@ -105,18 +105,18 @@ app.get('/volume/gain', (req, res) => {
     const volume_controls = config.volume_controls
     if (volume_controls) {
         if (req.query && req.query.set) {
-            exec(`vmcli.exe ${volume_controls.row}.Gain=${percentageToDecibel(parseInt(req.query.set), volume_controls.min || -80, volume_controls.max || 0)}`, (error, stdout, stderr) => {
-                if (error) {
-                    error(`Error executing setting gain: ${error.message}`);
+            exec(`vmcli.exe ${volume_controls.row}.Gain=${percentageToDecibel(parseInt(req.query.set), volume_controls.min || -80, volume_controls.max || 0)}`, (e, stdout, stderr) => {
+                if (e) {
+                    error(`Error executing setting gain: ${e.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
                     res.status(200).send(req.query.set);
                 }
             });
         } else {
-            exec(`vmcli.exe ${volume_controls.row}.Gain`, (error, stdout, stderr) => {
-                if (error) {
-                    error(`Error executing getting current gain: ${error.message}`);
+            exec(`vmcli.exe ${volume_controls.row}.Gain`, (e, stdout, stderr) => {
+                if (e) {
+                    error(`Error executing getting current gain: ${e.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
                     res.status(200).send(decibelToPercentage(stdout.split("=").pop(), volume_controls.min || -80, volume_controls.max || 0).toFixed().toString());
@@ -132,18 +132,18 @@ app.get('/volume/mute', (req, res) => {
     const volume_controls = config.volume_controls
     if (volume_controls) {
         if (req.query && req.query.set) {
-            exec(`vmcli.exe ${volume_controls.row}.Mute=${req.query.set}`, (error, stdout, stderr) => {
-                if (error) {
-                    error(`Error executing setting mute: ${error.message}`);
+            exec(`vmcli.exe ${volume_controls.row}.Mute=${req.query.set}`, (e, stdout, stderr) => {
+                if (e) {
+                    error(`Error executing setting mute: ${e.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
                     res.status(200).send(req.query.set);
                 }
             });
         } else {
-            exec(`vmcli.exe ${volume_controls.row}.Mute`, (error, stdout, stderr) => {
-                if (error) {
-                    error(`Error executing getting current mute: ${error.message}`);
+            exec(`vmcli.exe ${volume_controls.row}.Mute`, (e, stdout, stderr) => {
+                if (e) {
+                    error(`Error executing getting current mute: ${e.message}`);
                     res.status(500).send('Command execution failed');
                 } else {
                     res.status(200).send((stdout.split("=").pop().split('.')[0] === "0") ? "1" : "0");
@@ -286,10 +286,10 @@ wss.on('connection', (ws) => {
                     case 'action':
                         const action = config.actions.filter(e => e.id === data.id)[0]
                         if (action) {
-                            exec(action.command, (error, stdout, stderr) => {
-                                if (error) {
-                                    error(`Error executing command '${action.command}': ${error.message}`);
-                                    ws.send(JSON.stringify({error: true, ok: false, reason: error.message}));
+                            exec(action.command, (e, stdout, stderr) => {
+                                if (e) {
+                                    error(`Error executing command '${action.command}': ${e.message}`);
+                                    ws.send(JSON.stringify({error: true, ok: false, reason: e.message}));
 
                                 } else {
                                     log(`Command '${action.command}' executed successfully`);
@@ -365,9 +365,9 @@ if (init_config.serialPort) {
                             command += ` ${receivedData[2]}`;
                         }
                         log(command);
-                        exec(command, (error, stdout, stderr) => {
-                            if (error) {
-                                error(`Error executing command '${command}': ${error.message}`);
+                        exec(command, (e, stdout, stderr) => {
+                            if (e) {
+                                error(`Error executing command '${command}': ${e.message}`);
                             } else {
                                 log(`Command '${command}' executed successfully`);
                             }
