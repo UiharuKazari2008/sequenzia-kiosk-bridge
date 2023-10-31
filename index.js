@@ -77,10 +77,43 @@ app.get('/action/:id', (req, res) => {
             if (e) {
                 error(`Error executing command '${action.command}': ${e.message}`);
                 res.status(500).send('Command execution failed');
-
             } else {
                 log(`Command '${action.command}' executed successfully`);
                 res.send(stdout);
+                if (init_config.serialPort && action.display_message) {
+                    let _request = "DISPLAY_MESSAGE::";
+                    if (action.display_message.icon) {
+                        _request += action.display_message.icon;
+                    } else {
+                        _request += "120";
+                    }
+                    _request += "::";
+                    if (action.display_message.text) {
+                        _request += action.display_message.text;
+                    } else {
+                        _request += "SET TEXT";
+                    }
+                    _request += "::";
+                    _request += ((action.display_message.japanese) ? 0 : 1);
+                    _request += "::";
+                    if (action.display_message.brightness) {
+                        _request += action.display_message.brightness;
+                    } else {
+                        _request += 255;
+                    }
+                    _request += "::";
+                    _request += ((action.display_message.invert) ? 0 : 1);
+                    _request += "::";
+                    if (action.display_message.timeout) {
+                        _request += action.display_message.timeout;
+                    } else {
+                        _request += 5;
+                    }
+                    _request += "::";
+                    _request += ((action.display_message.is_small) ? 2 : 1);
+                    _request += "::";
+                    request = _request;
+                }
             }
         });
     } else {
