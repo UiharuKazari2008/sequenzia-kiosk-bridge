@@ -409,6 +409,41 @@ if (init_config.serialPort) {
                     } else {
                         log("MCU Unknown Request: " + receivedData[1]);
                     }
+                    if (action !== -1 && config.actions[action].display_message) {
+                        let _request = "DISPLAY_MESSAGE::";
+                        if (config.actions[action].display_message.icon) {
+                            _request += config.actions[action].display_message.icon;
+                        } else {
+                            _request += "120";
+                        }
+                        _request += "::";
+                        if (config.actions[action].display_message.text) {
+                            _request += config.actions[action].display_message.text;
+                        } else {
+                            _request += "SET TEXT";
+                        }
+                        _request += "::";
+                        _request += ((config.actions[action].display_message.japanese) ? 0 : 1);
+                        _request += "::";
+                        if (config.actions[action].display_message.brightness) {
+                            _request += config.actions[action].display_message.brightness;
+                        } else {
+                            _request += 255;
+                        }
+                        _request += "::";
+                        _request += ((config.actions[action].display_message.invert) ? 0 : 1);
+                        _request += "::";
+                        if (config.actions[action].display_message.timeout) {
+                            _request += config.actions[action].display_message.timeout;
+                        } else {
+                            _request += 5;
+                        }
+                        _request += "::";
+                        _request += ((config.actions[action].display_message.is_small) ? 2 : 1);
+                        _request += "::";
+                        log(_request);
+                        request = _request;
+                    }
                 }
             }
         });
