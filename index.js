@@ -348,10 +348,10 @@ wss.on('connection', (ws) => {
     });
 });
 
-let loop_audio = false;
-async function loopAudio(audio_file, sleep_time) {
-    loop_audio = true;
-    while (loop_audio) {
+let audio_file = null;
+let sleep_time = null;
+async function loopAudio() {
+    while (audio_file) {
         await new Promise((resolve) => {
             exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/${audio_file}.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
                 if (e) {
@@ -468,7 +468,8 @@ if (init_config.serialPort) {
                 } else if (receivedData[0] === "AUDIO_PLAY") {
                     switch (receivedData[1]) {
                         case "GAME_START":
-                            loop_audio = false;
+                            audio_file = null;
+                            sleep_time = null;
                             exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/boot.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
                                 if (e) {
                                     error(`Error executing audio: ${e.message}`);
@@ -476,7 +477,8 @@ if (init_config.serialPort) {
                             });
                             break;
                         case "GAME_OFF":
-                            loop_audio = false;
+                            audio_file = null;
+                            sleep_time = null;
                             exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/shutdown.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
                                 if (e) {
                                     error(`Error executing audio: ${e.message}`);
@@ -485,13 +487,17 @@ if (init_config.serialPort) {
                             break;
                         case "SHUTDOWN":
                             if (receivedData.length > 2) {
-                                loopAudio('warning', parseInt(receivedData[2]));
+                                audio_file = "warning";
+                                sleep_time = parseInt(receivedData[2]);
+                                loopAudio();
                             } else {
-                                loopAudio('warning_long');
+                                audio_file = "warning_long";
+                                sleep_time = null;
                             }
                             break;
                         case "STOP":
-                            loop_audio = false;
+                            audio_file = null;
+                            sleep_time = null;
                             break;
                         default:
                             error("MCU Requested Unkown Audio FX: " + receivedData[1]);
