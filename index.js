@@ -6,7 +6,7 @@ const wss = new WebSocket.Server({ port: 6834 });
 const exec = require('child_process').exec;
 const cors = require('cors');
 const { SerialPort, ReadlineParser } = require('serialport');
-const player = require('play-sound')({ players: ['afplay', 'cvlc'] });
+const player = require('play-sound')();
 const init_config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
