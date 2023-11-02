@@ -6,7 +6,7 @@ const wss = new WebSocket.Server({ port: 6834 });
 const exec = require('child_process').exec;
 const cors = require('cors');
 const { SerialPort, ReadlineParser } = require('serialport');
-const player = require('play-sound')();
+const player = require('play-sound')({ player: "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" });
 const init_config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
@@ -353,8 +353,10 @@ let loop_audio = false;
 async function loopAudio(audio_file, sleep_time) {
     while (loop_audio) {
         await new Promise((resolve) => {
-            player.play(`./audio_fx/${audio_file}.mp3`,  { afplay: ['-v', 0.15 ], powershell: ['--play-and-exit', '--volume', 256] }, (err) => {
-                if (err) console.log(`Error: ${err}`);
+            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/${audio_file}.mp3 --play-and-exit --volume 256`, (e, stdout, stderr) => {
+                if (e) {
+                    error(`Error executing audio: ${e.message}`);
+                }
                 resolve();
             });
         });
@@ -463,14 +465,18 @@ if (init_config.serialPort) {
                     switch (receivedData[1]) {
                         case "GAME_START":
                             loop_audio = false;
-                            player.play('./audio_fx/boot.mp3',  { afplay: ['-v', 0.15 ], powershell: ['--play-and-exit', '--volume', 256] }, (err) => {
-                                if (err) error(`Error: ${err}`);
+                            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/boot.mp3 --play-and-exit --volume 256`, (e, stdout, stderr) => {
+                                if (e) {
+                                    error(`Error executing audio: ${e.message}`);
+                                }
                             });
                             break;
                         case "GAME_OFF":
                             loop_audio = false;
-                            player.play('./audio_fx/shutdown.mp3',  { afplay: ['-v', 0.15 ], powershell: ['--play-and-exit', '--volume', 256] }, (err) => {
-                                if (err) error(`Error: ${err}`);
+                            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/shutdown.mp3 --play-and-exit --volume 256`, (e, stdout, stderr) => {
+                                if (e) {
+                                    error(`Error executing audio: ${e.message}`);
+                                }
                             });
                             break;
                         case "SHUTDOWN":
