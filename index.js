@@ -363,6 +363,7 @@ async function loopAudio(audio_file, sleep_time) {
     }
 }
 if (init_config.serialPort) {
+    log(player.player)
     function initializeSerialPort() {
         const port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
         const parser = port.pipe(new ReadlineParser({delimiter: '\n'}));
