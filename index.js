@@ -350,18 +350,23 @@ wss.on('connection', (ws) => {
 
 let audio_file = null;
 let sleep_time = null;
+let audio_active = false;
 async function loopAudio() {
-    while (audio_file) {
-        await new Promise((resolve) => {
-            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/${audio_file}.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
-                if (e) {
-                    error(`Error executing audio: ${e.message}`);
-                }
-                resolve();
+    if (audio_active) {
+        audio_active = true;
+        while (audio_file) {
+            await new Promise((resolve) => {
+                exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/${audio_file}.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
+                    if (e) {
+                        error(`Error executing audio: ${e.message}`);
+                    }
+                    resolve();
+                });
             });
-        });
-        if (sleep_time)
-            await sleep(sleep_time)
+            if (sleep_time)
+                await sleep(sleep_time)
+        }
+        audio_active = false;
     }
 }
 if (init_config.serialPort) {
@@ -489,11 +494,11 @@ if (init_config.serialPort) {
                             if (receivedData.length > 2) {
                                 audio_file = "warning";
                                 sleep_time = parseInt(receivedData[2]);
-                                loopAudio();
                             } else {
                                 audio_file = "warning_long";
                                 sleep_time = null;
                             }
+                            loopAudio();
                             break;
                         case "STOP":
                             audio_file = null;
