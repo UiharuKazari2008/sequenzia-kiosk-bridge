@@ -484,7 +484,7 @@ if (init_config.serialPort) {
                             break;
                         case "SHUTDOWN":
                             loop_audio = true;
-                            if (receivedData[2]) {
+                            if (receivedData.length > 2) {
                                 loopAudio('warning', parseInt(receivedData[2]));
                             } else {
                                 loopAudio('warning_long');
