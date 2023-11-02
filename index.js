@@ -6,6 +6,7 @@ const wss = new WebSocket.Server({ port: 6834 });
 const exec = require('child_process').exec;
 const cors = require('cors');
 const { SerialPort, ReadlineParser } = require('serialport');
+const player = require('play-sound')();
 const init_config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
@@ -348,6 +349,19 @@ wss.on('connection', (ws) => {
     });
 });
 
+let loop_audio = false;
+async function loopAudio(audio_file, sleep_time) {
+    while (loop_audio) {
+        await new Promise((resolve) => {
+            player.play(`./audio_fx/${audio_file}.mp3`,  { afplay: ['-v', 0.15 ] }, (err) => {
+                if (err) console.log(`Error: ${err}`);
+                resolve();
+            });
+        });
+        if (sleep_time)
+            await sleep(sleep_time * 1000)
+    }
+}
 if (init_config.serialPort) {
     function initializeSerialPort() {
         const port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
@@ -443,6 +457,35 @@ if (init_config.serialPort) {
                         _request += "::";
                         log(_request);
                         request = _request;
+                    }
+                } else if (receivedData[0] === "AUDIO_PLAY") {
+                    switch (receivedData[1]) {
+                        case "GAME_START":
+                            loop_audio = false;
+                            player.play('./audio_fx/boot.mp3',  { afplay: ['-v', 0.15 ] }, (err) => {
+                                if (err) error(`Error: ${err}`);
+                            });
+                            break;
+                        case "GAME_OFF":
+                            loop_audio = false;
+                            player.play('./audio_fx/shutdown.mp3',  { afplay: ['-v', 0.15 ] }, (err) => {
+                                if (err) error(`Error: ${err}`);
+                            });
+                            break;
+                        case "SHUTDOWN":
+                            loop_audio = true;
+                            if (receivedData[2]) {
+                                loopAudio('warning', parseInt(receivedData[2]));
+                            } else {
+                                loopAudio('warning_long');
+                            }
+                            break;
+                        case "STOP":
+                            loop_audio = false;
+                            break;
+                        default:
+                            error("MCU Requested Unkown Audio FX: " + receivedData[1]);
+                            break;
                     }
                 }
             }
