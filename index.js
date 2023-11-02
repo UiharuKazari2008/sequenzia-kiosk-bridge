@@ -361,7 +361,7 @@ async function loopAudio(audio_file, sleep_time) {
             });
         });
         if (sleep_time)
-            await sleep(sleep_time * 1000)
+            await sleep(sleep_time)
     }
 }
 if (init_config.serialPort) {
@@ -484,7 +484,6 @@ if (init_config.serialPort) {
                             });
                             break;
                         case "SHUTDOWN":
-                            log(receivedData)
                             if (receivedData.length > 2) {
                                 loopAudio('warning', parseInt(receivedData[2]));
                             } else {
