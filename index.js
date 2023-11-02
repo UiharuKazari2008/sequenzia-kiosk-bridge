@@ -353,7 +353,7 @@ let loop_audio = false;
 async function loopAudio(audio_file, sleep_time) {
     while (loop_audio) {
         await new Promise((resolve) => {
-            player.play(`./audio_fx/${audio_file}.mp3`,  { afplay: ['-v', 0.15 ], vlc: ['--play-and-exit', '--volume', 256] }, (err) => {
+            player.play(`./audio_fx/${audio_file}.mp3`,  { afplay: ['-v', 0.15 ], powershell: ['--play-and-exit', '--volume', 256] }, (err) => {
                 if (err) console.log(`Error: ${err}`);
                 resolve();
             });
@@ -463,13 +463,13 @@ if (init_config.serialPort) {
                     switch (receivedData[1]) {
                         case "GAME_START":
                             loop_audio = false;
-                            player.play('./audio_fx/boot.mp3',  { afplay: ['-v', 0.15 ], vlc: ['--play-and-exit', '--volume', 256] }, (err) => {
+                            player.play('./audio_fx/boot.mp3',  { afplay: ['-v', 0.15 ], powershell: ['--play-and-exit', '--volume', 256] }, (err) => {
                                 if (err) error(`Error: ${err}`);
                             });
                             break;
                         case "GAME_OFF":
                             loop_audio = false;
-                            player.play('./audio_fx/shutdown.mp3',  { afplay: ['-v', 0.15 ], vlc: ['--play-and-exit', '--volume', 256] }, (err) => {
+                            player.play('./audio_fx/shutdown.mp3',  { afplay: ['-v', 0.15 ], powershell: ['--play-and-exit', '--volume', 256] }, (err) => {
                                 if (err) error(`Error: ${err}`);
                             });
                             break;
