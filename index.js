@@ -6,7 +6,6 @@ const wss = new WebSocket.Server({ port: 6834 });
 const exec = require('child_process').exec;
 const cors = require('cors');
 const { SerialPort, ReadlineParser } = require('serialport');
-const player = require('play-sound')({ player: "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" });
 const init_config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
@@ -365,7 +364,6 @@ async function loopAudio(audio_file, sleep_time) {
     }
 }
 if (init_config.serialPort) {
-    log(player.player)
     function initializeSerialPort() {
         const port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
         const parser = port.pipe(new ReadlineParser({delimiter: '\n'}));
