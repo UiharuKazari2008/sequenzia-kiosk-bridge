@@ -352,7 +352,7 @@ let audio_file = null;
 let sleep_time = null;
 let audio_active = false;
 async function loopAudio() {
-    if (audio_active) {
+    if (audio_active === false) {
         audio_active = true;
         while (audio_file) {
             await new Promise((resolve) => {
