@@ -350,6 +350,7 @@ wss.on('connection', (ws) => {
 
 let loop_audio = false;
 async function loopAudio(audio_file, sleep_time) {
+    loop_audio = true;
     while (loop_audio) {
         await new Promise((resolve) => {
             exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/${audio_file}.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
@@ -483,7 +484,7 @@ if (init_config.serialPort) {
                             });
                             break;
                         case "SHUTDOWN":
-                            loop_audio = true;
+                            log(receivedData)
                             if (receivedData.length > 2) {
                                 loopAudio('warning', parseInt(receivedData[2]));
                             } else {
