@@ -352,7 +352,7 @@ let loop_audio = false;
 async function loopAudio(audio_file, sleep_time) {
     while (loop_audio) {
         await new Promise((resolve) => {
-            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/${audio_file}.mp3 --play-and-exit --volume 256`, (e, stdout, stderr) => {
+            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/${audio_file}.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
                 if (e) {
                     error(`Error executing audio: ${e.message}`);
                 }
@@ -364,7 +364,7 @@ async function loopAudio(audio_file, sleep_time) {
     }
 }
 if (init_config.serialPort) {
-    exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/boot.mp3 --play-and-exit --volume 256`, (e, stdout, stderr) => {
+    exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/boot.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
         if (e) {
             error(`Error executing audio: ${e.message}`);
         }
@@ -468,7 +468,7 @@ if (init_config.serialPort) {
                     switch (receivedData[1]) {
                         case "GAME_START":
                             loop_audio = false;
-                            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/boot.mp3 --play-and-exit --volume 256`, (e, stdout, stderr) => {
+                            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/boot.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
                                 if (e) {
                                     error(`Error executing audio: ${e.message}`);
                                 }
@@ -476,7 +476,7 @@ if (init_config.serialPort) {
                             break;
                         case "GAME_OFF":
                             loop_audio = false;
-                            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/shutdown.mp3 --play-and-exit --volume 256`, (e, stdout, stderr) => {
+                            exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/shutdown.mp3 --play-and-exit --gain=0.25`, (e, stdout, stderr) => {
                                 if (e) {
                                     error(`Error executing audio: ${e.message}`);
                                 }
