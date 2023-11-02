@@ -364,6 +364,11 @@ async function loopAudio(audio_file, sleep_time) {
     }
 }
 if (init_config.serialPort) {
+    exec(`"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe" ./audio_fx/boot.mp3 --play-and-exit --volume 256`, (e, stdout, stderr) => {
+        if (e) {
+            error(`Error executing audio: ${e.message}`);
+        }
+    });
     function initializeSerialPort() {
         const port = new SerialPort({path: init_config.serialPort || "COM50", baudRate: init_config.serialBaud || 115200});
         const parser = port.pipe(new ReadlineParser({delimiter: '\n'}));
