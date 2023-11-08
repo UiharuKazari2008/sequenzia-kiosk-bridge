@@ -441,9 +441,9 @@ if (init_config.serialPort) {
                         fs.writeFileSync(config.disk_select, receivedData[1].toString(), 'utf8');
                         exec("schtasks /run /tn ResetALLSRuntime", (e, stdout, stderr) => {
                             if (e) {
-                                error(`Error executing ALLS command '${command}': ${e.message}`);
+                                error(`Error executing reboot command: ${e.message}`);
                             } else {
-                                log(`ALLS Runtime Command '${command}' executed successfully`);
+                                log(`ALLS Reboot Command executed successfully`);
                             }
                         });
                         log("MCU Requested Disk Select: " + receivedData[1]);
