@@ -416,6 +416,40 @@ if (init_config.serialPort) {
                         response = receivedData.slice(1);
                         log("MCU Response: " + response);
                     }
+                } else if (receivedData[0] === "PS" && config.power_switch) {
+                    try {
+                        let command = "schtasks /run /tn ";
+                        if (receivedData[1] === "0") {
+                            command += "StopALLSRuntime";
+                        } else if (receivedData[1] === "1") {
+                            command += "StartALLSRuntime";
+                        } else if (receivedData[1] === "128") {
+                            command += "ResetALLSRuntime";
+                        }
+                        exec(command, (e, stdout, stderr) => {
+                            if (e) {
+                                error(`Error executing ALLS command '${command}': ${e.message}`);
+                            } else {
+                                log(`ALLS Runtime Command '${command}' executed successfully`);
+                            }
+                        });
+                    } catch (e) {
+                        error("Failed to update disk selection: " + e.message);
+                    }
+                } else if (receivedData[0] === "DS" && config.disk_select) {
+                    try {
+                        fs.writeFileSync(config.disk_select, receivedData[1].toString(), 'utf8');
+                        exec("schtasks /run /tn ResetALLSRuntime", (e, stdout, stderr) => {
+                            if (e) {
+                                error(`Error executing ALLS command '${command}': ${e.message}`);
+                            } else {
+                                log(`ALLS Runtime Command '${command}' executed successfully`);
+                            }
+                        });
+                        log("MCU Requested Disk Select: " + receivedData[1]);
+                    } catch (e) {
+                        error("Failed to update disk selection: " + e.message);
+                    }
                 } else if (receivedData[0] === "ACTION") {
                     const action = (config.actions.map(e => e.id)).indexOf(receivedData[1]);
                     if (action !== -1 && config.actions[action].wsc) {
