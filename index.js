@@ -72,7 +72,15 @@ app.get('/get_special_menu/chun', (req,res) => {
 app.get('/action/:id', (req, res) => {
     const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
     const action = config.actions.filter(e => e.id === req.params.id)[0]
-    if (action) {
+    if (action && action.wsc) {
+        Object.values(WSClients).forEach(ws => ws.send(JSON.stringify({
+            location: action.location,
+            menu: action.menu,
+            item: action.item,
+            undo: action.undo
+        })));
+        res.send("OK");
+    } else if (action) {
         exec(action.command, (e, stdout, stderr) => {
             if (e) {
                 error(`Error executing command '${action.command}': ${e.message}`);
