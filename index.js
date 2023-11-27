@@ -578,6 +578,11 @@ let io3Port = false;
 if (init_config.io3SerialPort) {
     function initializeIO3SerialPort() {
         io3Port = new SerialPort({path: init_config.io3SerialPort || "COM51", baudRate: init_config.io3SerialBaud || 9600});
+        const parser = io3Port.pipe(new ReadlineParser({delimiter: '\n'}));
+        parser.on('data', (data) => {
+            let receivedData = data.toString().trim()
+            console.log("IO3 Message: " + receivedData);
+        })
         io3Port.on('error', (err) => {
             io3Port = false;
             error(`IO3 Serial port error: ${err.message}`);
