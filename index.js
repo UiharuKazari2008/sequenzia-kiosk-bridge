@@ -508,6 +508,8 @@ if (init_config.serialPort) {
                             error("MCU Requested Unkown Audio FX: " + receivedData[1]);
                             break;
                     }
+                } else if (receivedData[0] === "GPIO" && io3Port !== false) {
+                    io3Port.write(`${receivedData[1]}\n`);
                 }
             }
         });
@@ -529,4 +531,25 @@ if (init_config.serialPort) {
         });
     }
     initializeSerialPort();
+}
+let io3Port = false;
+if (init_config.io3SerialPort) {
+    function initializeIO3SerialPort() {
+        io3Port = new SerialPort({path: init_config.io3SerialPort || "COM51", baudRate: init_config.io3SerialBaud || 9600});
+        io3Port.on('error', (err) => {
+            io3Port = false;
+            error(`IO3 Serial port error: ${err.message}`);
+            setTimeout(initializeIO3SerialPort, 5000); // Retry after 5 seconds
+        });
+        io3Port.on('close', (err) => {
+            io3Port = false;
+            setTimeout(initializeIO3SerialPort, 1000); // Retry after 5 seconds
+        });
+
+        // Handle the opening of the serial port
+        io3Port.on('open', () => {
+            log(`IO3 Connected via ${init_config.io3SerialPort}`);
+        });
+    }
+    initializeIO3SerialPort();
 }
