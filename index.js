@@ -551,6 +551,7 @@ if (init_config.serialPort) {
                             break;
                     }
                 } else if (receivedData[0] === "GPIO" && io3Port !== false) {
+                    log("GPIO Request: " + receivedData[1])
                     io3Port.write(`${receivedData[1]}\n`);
                 }
             }
@@ -581,7 +582,7 @@ if (init_config.io3SerialPort) {
         const parser = io3Port.pipe(new ReadlineParser({delimiter: '\n'}));
         parser.on('data', (data) => {
             let receivedData = data.toString().trim()
-            console.log("IO3 Message: " + receivedData);
+            log("IO3 Message: " + receivedData);
         })
         io3Port.on('error', (err) => {
             io3Port = false;
