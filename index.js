@@ -143,7 +143,6 @@ app.get('/io3/:action', (req, res) => {
                 res.status(404).send('Unknown GPIO Action');
                 break;
         }
-        io3Port.write(`${}\n`);
     } else {
         res.status(500).send('IO3 Not Available');
     }
