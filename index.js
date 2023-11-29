@@ -395,7 +395,7 @@ if (init_config.serialPort) {
                 request = null;
             }
         }, 5)
-        parser.on('data', (data) => {
+        parser.on('data', async (data) => {
             const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
             let receivedData = data.toString().trim()
             if (receivedData.includes("::")) {
@@ -460,6 +460,56 @@ if (init_config.serialPort) {
                             item: config.actions[action].item,
                             undo: config.actions[action].undo
                         })));
+                    } else if (action !== -1 && config.actions[action].mcu_link) {
+                        log("MCU to MCU Requested: " + receivedData[1]);
+                        if (config.mcu_commands) {
+                            if (request === null) {
+                                const command = config.mcu_commands.filter(e => e.id === config.actions[action].mcu_link);
+                                if (command.length > 0 && command[0].cmd) {
+                                    let _request = `${command[0].cmd}`;
+                                    if (config.actions[action].mcu_link_options) {
+                                        _request += "::";
+                                        if (typeof config.actions[action].mcu_link_options === "string") {
+                                            _request += config.actions[action].mcu_link_options
+                                        } else {
+                                            _request += config.actions[action].mcu_link_options.join("::");
+                                        }
+                                    } else if (command[0].options) {
+                                        _request += "::";
+                                        if (typeof command[0].options === "string") {
+                                            _request += command[0].options
+                                        } else {
+                                            _request += command[0].options.join("::");
+                                        }
+                                    }
+                                    _request += "::";
+                                    request = _request;
+                                    if (command.length > 0 && command[0].return === true) {
+                                        let i = 0;
+                                        while (i <= 501) {
+                                            await sleep(10).then(() => {
+                                                log(`Waiting for response...`)
+                                                if (response !== null) {
+                                                    log(response.join(' '));
+                                                    response = null;
+                                                    i = 5000;
+                                                } else if (i >= 500) {
+                                                    error("FAIL - NO RESPONSE FROM MCU!");
+                                                } else {
+                                                    i++
+                                                }
+                                            })
+                                        }
+                                    }
+                                } else {
+                                    error("Not Configured");
+                                }
+                            } else {
+                                error("MCU Busy");
+                            }
+                        } else {
+                            error("MCU Link Request Unknown");
+                        }
                     } else if (action !== -1) {
                         log("MCU Requested: " + receivedData[1]);
                         let command = config.actions[action].command;
