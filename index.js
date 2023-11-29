@@ -138,6 +138,7 @@ app.get('/io3/:action', (req, res) => {
             case 'START':
             case 'CARD':
                 io3Port.write(`${req.params.action.toUpperCase()}\n`);
+                res.status(200).send('OK');
                 break;
             default:
                 res.status(404).send('Unknown GPIO Action');
