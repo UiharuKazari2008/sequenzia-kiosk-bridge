@@ -129,6 +129,25 @@ app.get('/action/:id', (req, res) => {
         res.status(404).send('Action does not exist');
     }
 })
+app.get('/io3/:action', (req, res) => {
+    if (io3Port) {
+        switch (req.params.action) {
+            case 'TEST':
+            case 'SERVICE':
+            case 'CREDIT':
+            case 'START':
+            case 'CARD':
+                io3Port.write(`${req.params.action.toUpperCase()}\n`);
+                break;
+            default:
+                res.status(404).send('Unknown GPIO Action');
+                break;
+        }
+        io3Port.write(`${}\n`);
+    } else {
+        res.status(500).send('IO3 Not Available');
+    }
+})
 
 function percentageToDecibel(percentage, _min, _max) {
     const minDb = _min || -80;
@@ -460,6 +479,13 @@ if (init_config.serialPort) {
                             item: config.actions[action].item,
                             undo: config.actions[action].undo
                         })));
+                    } else if (action !== -1 && config.actions[action].io3) {
+                        log("MCU to IO3 Requested: " + receivedData[1]);
+                        if (io3Port) {
+                            io3Port.write(`${config.actions[action].io3.toUpperCase()}\n`);
+                        } else {
+                            error("Not Configured");
+                        }
                     } else if (action !== -1 && config.actions[action].mcu_link) {
                         log("MCU to MCU Requested: " + receivedData[1]);
                         if (config.mcu_commands) {
