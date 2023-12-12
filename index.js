@@ -629,6 +629,9 @@ if (init_config.serialPort) {
                 } else if (receivedData[0] === "GPIO" && io3Port !== false) {
                     log("GPIO Request: " + receivedData[1])
                     io3Port.write(`${receivedData[1]}\n`);
+                } else if (receivedData[0] === "LED_DATA" && io3Port !== false) {
+                    log("JVS LED Data: " + data.toString().trim())
+                    io3Port.write(`${data.toString().trim()}\n`);
                 }
             }
         });
