@@ -148,6 +148,87 @@ app.get('/io3/:action', (req, res) => {
         res.status(500).send('IO3 Not Available');
     }
 })
+app.get('/led_data', (req, res) => {
+    if (req.query.bankSelect && req.query.bankSelect === "10") {
+        if (init_config.io3SerialPort) {
+            //  LED_DATA::brightness::time::hex_data::animate::
+            let _request = "LED_DATA::"
+            if (req.query.ledBrightness && !isNaN(parseInt(req.query.ledBrightness.toString()))) {
+                _request += req.query.ledBrightness.toString() + "::";
+            } else {
+                _request += "-1::";
+            }
+            if (req.query.transition_time && !isNaN(parseInt(req.query.transition_time.toString()))) {
+                _request += req.query.transition_time.toString() + "::";
+            } else {
+                _request += "-1::";
+            }
+            if (req.query.ledValues) {
+                _request += req.query.ledValues + "::";
+                if (req.query.ani_start) {
+                    _request += "1::";
+                } else {
+                    _request += "-1::";
+                }
+                log("JVS LED Data: " + _request.toString().trim());
+                io3Port.write(`${_request.toString().trim()}\n`);
+                res.status(200).send("OK");
+            } else if (req.query.ledColor) {
+                _request += req.query.ledColor + "::";
+                if (req.query.ani_start) {
+                    _request += "1::";
+                } else {
+                    _request += "-1::";
+                }
+                log("JVS LED Data: " + _request.toString().trim());
+                io3Port.write(`${_request.toString().trim()}\n`);
+                res.status(200).send("OK");
+            } else {
+                res.status(400).send("Missing Data");
+            }
+        } else {
+            res.status(500).send('Serial Port Not Available');
+        }
+    } else if (init_config.serialPort) {
+        //  LED_DATA::bank_id::brightness::time::take_own::is_stream::hex_data::
+        let _request = "LED_DATA::"
+        if (req.query.bankSelect) {
+            _request += req.query.bankSelect + "::";
+        } else {
+            _request += "0::";
+        }
+        if (req.query.ledBrightness && !isNaN(parseInt(req.query.ledBrightness.toString()))) {
+            _request += req.query.ledBrightness.toString() + "::";
+        } else {
+            _request += "-1::";
+        }
+        if (req.query.transition_time && !isNaN(parseInt(req.query.transition_time.toString()))) {
+            _request += req.query.transition_time.toString() + "::";
+        } else {
+            _request += "-1::";
+        }
+        if (req.query.takeOwnership && req.query.takeOwnership === "true") {
+            _request += "1::";
+        } else {
+            _request += "0::";
+        }
+        if (req.query.ledValues) {
+            _request += "1::" + req.query.ledValues + "::";
+            request = _request;
+            log("HCM LED Data: " + _request.toString().trim());
+            res.status(200).send("OK");
+        } else if (req.query.ledColor) {
+            _request += "0::" + req.query.ledColor + "::";
+            request = _request;
+            log("HCM LED Data: " + _request.toString().trim());
+            res.status(200).send("OK");
+        } else {
+            res.status(400).send("Missing Data");
+        }
+    } else {
+        res.status(500).send('Serial Port Not Available');
+    }
+})
 
 function percentageToDecibel(percentage, _min, _max) {
     const minDb = _min || -80;
