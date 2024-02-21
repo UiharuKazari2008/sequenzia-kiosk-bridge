@@ -152,7 +152,11 @@ app.get('/led_data', (req, res) => {
     if (req.query.bankSelect && req.query.bankSelect === "10") {
         if (init_config.io3SerialPort) {
             //  LED_DATA::brightness::time::hex_data::animate::
-            let _request = "LED_DATA::"
+            let _request = "LED_DATA"
+            if (req.query.full_stream) {
+                _request += "_FULL"
+            }
+            _request += "::"
             if (req.query.ledBrightness && !isNaN(parseInt(req.query.ledBrightness.toString()))) {
                 _request += req.query.ledBrightness.toString() + "::";
             } else {
@@ -170,6 +174,7 @@ app.get('/led_data', (req, res) => {
                 } else {
                     _request += "-1::";
                 }
+
                 log("JVS LED Data: " + _request.toString().trim());
                 io3Port.write(`${_request.toString().trim()}\n`);
                 res.status(200).send("OK");
