@@ -521,6 +521,53 @@ if (init_config.serialPort) {
                         response = receivedData.slice(1);
                         log("MCU Response: " + response);
                     }
+                } else if (receivedData[0] === "DLPM" && config.dps_enable) {
+                    try {
+                        switch (receivedData[1]) {
+                            case "ABORT":
+                                await new Promise((ok => {
+                                    exec(`shutdown /a`, (e) => {
+                                        if (e) {
+                                            error(`Error requesting to abort shutdown: ${e.message}`);
+                                            ok(false);
+                                            if (receivedData[1] === "ABORT") {
+                                                port.write("DLPM::CANCEL::\n");
+                                            }
+                                        } else {
+                                            log(`System is entering dynamic low power mode in 60 Seconds`);
+                                            if (receivedData[1] === "ABORT") {
+                                                port.write("DLPM::CANCEL::\n");
+                                            }
+                                            ok(true);
+                                        }
+                                    });
+                                }));
+                            case "POWER_OFF":
+                                exec(`shutdown /s /f /t 60 /c "Dynamic Low Power Mode Requested"`, (e, stdout, stderr) => {
+                                    if (e) {
+                                        error(`Error requesting to abort shutdown: ${e.message}`);
+                                    } else {
+                                        log(`System is entering dynamic low power mode in 60 Seconds`);
+                                        port.write("DLPM::REQ_POWER_OFF::\n");
+                                    }
+                                });
+                                break;
+                            case "RESTART":
+                                exec(`shutdown /r /f /t 30 /c "Host Restart Requested"`, (e, stdout, stderr) => {
+                                    if (e) {
+                                        error(`Error requesting to abort shutdown: ${e.message}`);
+                                    } else {
+                                        log(`System is entering dynamic low power mode in 60 Seconds`);
+                                        port.write("DLPM::REQ_REBOOT::\n");
+                                    }
+                                });
+                                break;
+                            default:
+                                error(`Unknown DLPM Command '${receivedData[1]}'`);
+                        }
+                    } catch (e) {
+                        error("Failed to request power off: " + e.message);
+                    }
                 } else if (receivedData[0] === "PS" && config.power_switch) {
                     try {
                         let command = "schtasks /run /tn ";
