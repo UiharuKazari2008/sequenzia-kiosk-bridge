@@ -464,6 +464,7 @@ wss.on('connection', (ws) => {
 let audio_file = null;
 let sleep_time = null;
 let audio_active = false;
+let pingTimeout = null;
 async function loopAudio() {
     if (audio_active === false) {
         audio_active = true;
@@ -525,6 +526,8 @@ if (init_config.serialPort) {
                     try {
                         switch (receivedData[1]) {
                             case "ABORT":
+                                clearInterval(pingTimeout);
+                                pingTimeout = null;
                                 await new Promise((ok => {
                                     exec(`shutdown /a`, (e) => {
                                         if (e) {
@@ -548,7 +551,9 @@ if (init_config.serialPort) {
                                         error(`Error requesting to abort shutdown: ${e.message}`);
                                     } else {
                                         log(`System is entering dynamic low power mode in 60 Seconds`);
-                                        port.write("DLPM::REQ_POWER_OFF::\n");
+                                        pingTimeout = setInterval(() => {
+                                            port.write("DLPM::REQ_POWER_OFF::\n");
+                                        }, 2000);
                                     }
                                 });
                                 break;
@@ -558,7 +563,9 @@ if (init_config.serialPort) {
                                         error(`Error requesting to abort shutdown: ${e.message}`);
                                     } else {
                                         log(`System is entering dynamic low power mode in 60 Seconds`);
-                                        port.write("DLPM::REQ_REBOOT::\n");
+                                        pingTimeout = setInterval(() => {
+                                            port.write("DLPM::REQ_REBOOT::\n");
+                                        }, 2000);
                                     }
                                 });
                                 break;
