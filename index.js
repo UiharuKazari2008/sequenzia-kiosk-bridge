@@ -465,6 +465,7 @@ let audio_file = null;
 let sleep_time = null;
 let audio_active = false;
 let pingTimeout = null;
+let requestHibernate = null;
 async function loopAudio() {
     if (audio_active === false) {
         audio_active = true;
@@ -528,6 +529,8 @@ if (init_config.serialPort) {
                             case "ABORT":
                                 clearInterval(pingTimeout);
                                 pingTimeout = null;
+                                clearInterval(requestHibernate);
+                                requestHibernate = null;
                                 await new Promise((ok => {
                                     exec(`shutdown /a`, (e) => {
                                         if (e) {
@@ -546,25 +549,35 @@ if (init_config.serialPort) {
                                     });
                                 }));
                             case "POWER_OFF":
-                                if (!config.dps_power_off) {
-                                    let i = 0;
-                                    while (i <= 3) {
-                                        port.write("DLPM::REQ_POWER_OFF::\n");
-                                        await sleep(10);
-                                    }
-                                }
-                                exec(`shutdown ${(config.dps_power_off) ? '/s /f /t 5 /c "Dynamic Low Power Mode Requested"' : '/h'}`, (e, stdout, stderr) => {
-                                    if (e) {
-                                        error(`Error requesting to shutdown: ${e.message}`);
-                                    } else {
-                                        log(`System is entering dynamic low power mode in 60 Seconds`);
-                                        if (config.dps_power_off) {
+                                if (config.dps_power_off) {
+                                    exec(`shutdown /s /f /t 5 /c "Dynamic Low Power Mode Requested"`, (e, stdout, stderr) => {
+                                        if (e) {
+                                            error(`Error requesting to shutdown: ${e.message}`);
+                                        } else {
+                                            log(`System is entering dynamic low power mode in 60 Seconds`);
                                             pingTimeout = setInterval(() => {
                                                 port.write("DLPM::REQ_POWER_OFF::\n");
                                             }, 2000);
                                         }
+                                    });
+                                } else {
+                                    pingTimeout = setInterval(() => {
+                                        port.write("DLPM::REQ_POWER_OFF::\n");
+                                    }, 1000);
+                                    if (!requestHibernate) {
+                                        requestHibernate = setTimeout(() => {
+                                            exec(`shutdown /h`, (e, stdout, stderr) => {
+                                                if (e) {
+                                                    error(`Error requesting to shutdown: ${e.message}`);
+                                                } else {
+                                                    log(`System is entering dynamic low power mode`);
+                                                    requestHibernate = null;
+                                                }
+                                            });
+                                        }, 5000)
                                     }
-                                });
+                                }
+
                                 break;
                             case "RESTART":
                                 exec(`shutdown /r /f /t 5 /c "Host Restart Requested"`, (e, stdout, stderr) => {
