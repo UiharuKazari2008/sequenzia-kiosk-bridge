@@ -546,14 +546,23 @@ if (init_config.serialPort) {
                                     });
                                 }));
                             case "POWER_OFF":
+                                if (!config.dps_power_off) {
+                                    let i = 0;
+                                    while (i <= 3) {
+                                        port.write("DLPM::REQ_POWER_OFF::\n");
+                                        await sleep(10);
+                                    }
+                                }
                                 exec(`shutdown ${(config.dps_power_off) ? '/s /f /t 5 /c "Dynamic Low Power Mode Requested"' : '/h'}`, (e, stdout, stderr) => {
                                     if (e) {
                                         error(`Error requesting to shutdown: ${e.message}`);
                                     } else {
                                         log(`System is entering dynamic low power mode in 60 Seconds`);
-                                        pingTimeout = setInterval(() => {
-                                            port.write("DLPM::REQ_POWER_OFF::\n");
-                                        }, 2000);
+                                        if (config.dps_power_off) {
+                                            pingTimeout = setInterval(() => {
+                                                port.write("DLPM::REQ_POWER_OFF::\n");
+                                            }, 2000);
+                                        }
                                     }
                                 });
                                 break;
