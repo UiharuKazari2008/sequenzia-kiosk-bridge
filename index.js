@@ -546,7 +546,7 @@ if (init_config.serialPort) {
                                     });
                                 }));
                             case "POWER_OFF":
-                                exec(`shutdown /s /f /t 60 /c "Dynamic Low Power Mode Requested"`, (e, stdout, stderr) => {
+                                exec(`shutdown /s /f /t 5 /c "Dynamic Low Power Mode Requested"`, (e, stdout, stderr) => {
                                     if (e) {
                                         error(`Error requesting to abort shutdown: ${e.message}`);
                                     } else {
@@ -558,7 +558,7 @@ if (init_config.serialPort) {
                                 });
                                 break;
                             case "RESTART":
-                                exec(`shutdown /r /f /t 30 /c "Host Restart Requested"`, (e, stdout, stderr) => {
+                                exec(`shutdown /r /f /t 5 /c "Host Restart Requested"`, (e, stdout, stderr) => {
                                     if (e) {
                                         error(`Error requesting to abort shutdown: ${e.message}`);
                                     } else {
