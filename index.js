@@ -546,9 +546,9 @@ if (init_config.serialPort) {
                                     });
                                 }));
                             case "POWER_OFF":
-                                exec(`shutdown ${(config.dps_power_off) ? '/s /f /t 5 /c "Dynamic Low Power Mode Requested"' : 'h'}`, (e, stdout, stderr) => {
+                                exec(`shutdown ${(config.dps_power_off) ? '/s /f /t 5 /c "Dynamic Low Power Mode Requested"' : '/h'}`, (e, stdout, stderr) => {
                                     if (e) {
-                                        error(`Error requesting to abort shutdown: ${e.message}`);
+                                        error(`Error requesting to shutdown: ${e.message}`);
                                     } else {
                                         log(`System is entering dynamic low power mode in 60 Seconds`);
                                         pingTimeout = setInterval(() => {
@@ -560,7 +560,7 @@ if (init_config.serialPort) {
                             case "RESTART":
                                 exec(`shutdown /r /f /t 5 /c "Host Restart Requested"`, (e, stdout, stderr) => {
                                     if (e) {
-                                        error(`Error requesting to abort shutdown: ${e.message}`);
+                                        error(`Error requesting to restart: ${e.message}`);
                                     } else {
                                         log(`System is entering dynamic low power mode in 60 Seconds`);
                                         pingTimeout = setInterval(() => {
