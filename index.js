@@ -572,6 +572,8 @@ if (init_config.serialPort) {
                                                 } else {
                                                     log(`System is entering dynamic low power mode`);
                                                     requestHibernate = null;
+                                                    clearInterval(pingTimeout);
+                                                    pingTimeout = null;
                                                 }
                                             });
                                         }, 5000)
