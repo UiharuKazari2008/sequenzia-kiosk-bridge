@@ -546,7 +546,7 @@ if (init_config.serialPort) {
                                     });
                                 }));
                             case "POWER_OFF":
-                                exec(`shutdown /s /f /t 5 /c "Dynamic Low Power Mode Requested"`, (e, stdout, stderr) => {
+                                exec(`shutdown /${(config.dps_power_off) ? 's' : 'h'} /f /t 5 /c "Dynamic Low Power Mode Requested"`, (e, stdout, stderr) => {
                                     if (e) {
                                         error(`Error requesting to abort shutdown: ${e.message}`);
                                     } else {
