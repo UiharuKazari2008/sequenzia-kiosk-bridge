@@ -623,6 +623,8 @@ if (init_config.serialPort) {
                     try {
                         webreq(`http://localhost:6799/lcc/bookcase/set?id=${receivedData[1].toString()}`, async (error, response, body) => {
                             if (!error && response.statusCode === 200) {
+                                const statusMessage = body.toString();
+                                log("LCC Response: " + statusMessage);
                                 exec("schtasks /run /tn ResetALLSRuntime", (e, stdout, stderr) => {
                                     if (e) {
                                         error(`Error executing reboot command: ${e.message}`);
