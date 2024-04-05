@@ -1,6 +1,6 @@
 const fs = require("fs");
 const express = require("express");
-const request = require('request');
+const webreq = require('request');
 const WebSocket = require('ws');
 const app = express();
 const wss = new WebSocket.Server({ port: 6834 });
@@ -621,7 +621,7 @@ if (init_config.serialPort) {
                     }
                 } else if (receivedData[0] === "DS" && config.disk_select) {
                     try {
-                        request(`http://localhost:6799/lcc/bookcase/set?id=${receivedData[1].toString()}`, async (error, response, body) => {
+                        webreq(`http://localhost:6799/lcc/bookcase/set?id=${receivedData[1].toString()}`, async (error, response, body) => {
                             if (!error && response.statusCode === 200) {
                                 exec("schtasks /run /tn ResetALLSRuntime", (e, stdout, stderr) => {
                                     if (e) {
