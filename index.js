@@ -1,5 +1,6 @@
 const fs = require("fs");
 const express = require("express");
+const request = require('request');
 const WebSocket = require('ws');
 const app = express();
 const wss = new WebSocket.Server({ port: 6834 });
@@ -579,7 +580,6 @@ if (init_config.serialPort) {
                                         }, 5000)
                                     }
                                 }
-
                                 break;
                             case "RESTART":
                                 exec(`shutdown /r /f /t 5 /c "Host Restart Requested"`, (e, stdout, stderr) => {
@@ -621,14 +621,17 @@ if (init_config.serialPort) {
                     }
                 } else if (receivedData[0] === "DS" && config.disk_select) {
                     try {
-                        fs.writeFileSync(config.disk_select, receivedData[1].toString(), 'utf8');
-                        exec("schtasks /run /tn ResetALLSRuntime", (e, stdout, stderr) => {
-                            if (e) {
-                                error(`Error executing reboot command: ${e.message}`);
-                            } else {
-                                log(`ALLS Reboot Command executed successfully`);
+                        request(`http://localhost:6799/lcc/bookcase/set?id=${receivedData[1].toString()}`, async (error, response, body) => {
+                            if (!error && response.statusCode === 200) {
+                                exec("schtasks /run /tn ResetALLSRuntime", (e, stdout, stderr) => {
+                                    if (e) {
+                                        error(`Error executing reboot command: ${e.message}`);
+                                    } else {
+                                        log(`ALLS Reboot Command executed successfully`);
+                                    }
+                                });
                             }
-                        });
+                        })
                         log("MCU Requested Disk Select: " + receivedData[1]);
                     } catch (e) {
                         error("Failed to update disk selection: " + e.message);
