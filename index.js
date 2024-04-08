@@ -605,7 +605,7 @@ if (init_config.serialPort) {
                         if (receivedData[1] === "0") {
                             command += "stop";
                         } else if (receivedData[1] === "1") {
-                            command += "start";
+                            command += "init";
                         } else if (receivedData[1] === "128") {
                             command += "restart";
                         }
