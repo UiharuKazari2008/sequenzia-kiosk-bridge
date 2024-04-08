@@ -609,7 +609,7 @@ if (init_config.serialPort) {
                         } else if (receivedData[1] === "128") {
                             command += "restart";
                         }
-                        webreq(`http://localhost:6799/${command}`, async (error, response, body) => {
+                        webreq(`http://localhost:6799${command}`, async (error, response, body) => {
                             if (!error && response.statusCode === 200) {
                                 const statusMessage = body.toString();
                                 log(`ALLS Lifecycle Command '${command}': ${statusMessage}`);
