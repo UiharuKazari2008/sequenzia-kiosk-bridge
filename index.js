@@ -613,6 +613,10 @@ if (init_config.serialPort) {
                             if (!error && response.statusCode === 200) {
                                 const statusMessage = body.toString();
                                 log(`ALLS Lifecycle Command '${command}': ${statusMessage}`);
+                            } else if (error) {
+                                log(`ALLS Lifecycle Command '${command}': ${error.message}`);
+                            } else {
+                                log(`ALLS Lifecycle Command '${command}': ${response.statusCode}`);
                             }
                         })
                     } catch (e) {
