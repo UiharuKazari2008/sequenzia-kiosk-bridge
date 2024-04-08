@@ -601,21 +601,20 @@ if (init_config.serialPort) {
                     }
                 } else if (receivedData[0] === "PS" && config.power_switch) {
                     try {
-                        let command = "schtasks /run /tn ";
+                        let command = "/lce/kongou/"
                         if (receivedData[1] === "0") {
-                            command += "StopALLSRuntime";
+                            command += "stop";
                         } else if (receivedData[1] === "1") {
-                            command += "StartALLSRuntime";
+                            command += "start";
                         } else if (receivedData[1] === "128") {
-                            command += "ResetALLSRuntime";
+                            command += "restart";
                         }
-                        exec(command, (e, stdout, stderr) => {
-                            if (e) {
-                                error(`Error executing ALLS command '${command}': ${e.message}`);
-                            } else {
-                                log(`ALLS Runtime Command '${command}' executed successfully`);
+                        webreq(`http://localhost:6799/${command}`, async (error, response, body) => {
+                            if (!error && response.statusCode === 200) {
+                                const statusMessage = body.toString();
+                                log(`ALLS Lifecycle Command '${command}': ${statusMessage}`);
                             }
-                        });
+                        })
                     } catch (e) {
                         error("Failed to update disk selection: " + e.message);
                     }
@@ -625,13 +624,6 @@ if (init_config.serialPort) {
                             if (!error && response.statusCode === 200) {
                                 const statusMessage = body.toString();
                                 log("LCC Response: " + statusMessage);
-                                exec("schtasks /run /tn ResetALLSRuntime", (e, stdout, stderr) => {
-                                    if (e) {
-                                        error(`Error executing reboot command: ${e.message}`);
-                                    } else {
-                                        log(`ALLS Reboot Command executed successfully`);
-                                    }
-                                });
                             }
                         })
                         log("MCU Requested Disk Select: " + receivedData[1]);
