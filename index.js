@@ -624,13 +624,13 @@ if (init_config.serialPort) {
                     }
                 } else if (receivedData[0] === "DS" && config.disk_select) {
                     try {
-                        webreq(`http://localhost:6799/lcc/bookcase/set?id=${receivedData[1].toString()}`, async (error, response, body) => {
+                        log("MCU Requested Disk Select: " + receivedData[1]);
+                        webreq(`http://localhost:6799/lce/kongou/pull_id`, async (error, response, body) => {
                             if (!error && response.statusCode === 200) {
                                 const statusMessage = body.toString();
                                 log("LCC Response: " + statusMessage);
                             }
                         })
-                        log("MCU Requested Disk Select: " + receivedData[1]);
                     } catch (e) {
                         error("Failed to update disk selection: " + e.message);
                     }
